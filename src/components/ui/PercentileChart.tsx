@@ -26,7 +26,7 @@ ChartJS.register(
 
 const whiteBackgroundPlugin = {
   id: 'customCanvasBackgroundColor',
-  beforeDraw: (chart: any, args: any, options: any) => {
+  beforeDraw: (chart: any, _args: any, options: any) => {
     const {ctx} = chart;
     ctx.save();
     ctx.globalCompositeOperation = 'destination-over';
