@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { Typography } from '../components/ui/Typography';
 import { Badge } from '../components/ui/Badge';
-import { computePercentile, type FetalBmiResult } from '../data/calculators/fetalBmiLogic';
+import { computePercentile, expectedImcAtGa, CV_IMC, type FetalBmiResult } from '../data/calculators/fetalBmiLogic';
+import { normInv } from '../data/calculators/fetalWeightLogic';
+import { useLanguage } from '../contexts/LanguageContext';
+import { PercentileChart } from '../components/ui/PercentileChart';
+import { exportFetalBmiPDF } from '../utils/pdfExport';
 
 export const FetalBmiCalculator: React.FC = () => {
   const [weeks, setWeeks] = useState<number | ''>('');
@@ -15,22 +19,23 @@ export const FetalBmiCalculator: React.FC = () => {
   
   const [result, setResult] = useState<FetalBmiResult | null>(null);
   const [error, setError] = useState<string>('');
+  const { t, language } = useLanguage();
 
   const handleCalculate = () => {
     setError('');
     
     if (weeks === '' || efw === '' || sexo === '' || tallaM === '' || pesoPreg === '' || paridad === '' || edad === '') {
-      setError('Please complete all fields.');
+      setError(t('errFill'));
       return;
     }
     
     const d = days === '' ? 0 : days;
     const egDecimal = weeks + d / 7;
     
-    if (egDecimal < 28 || egDecimal > 42 + 6/7) return setError('Gestational age must be between 28+0 and 42+6.');
-    if (efw < 500 || efw > 6000) return setError('EFW must be between 500 and 6000 g.');
-    if (tallaM < 130 || tallaM > 200) return setError('Height must be between 130 and 200 cm.');
-    if (pesoPreg < 35 || pesoPreg > 200) return setError('Weight must be between 35 and 200 kg.');
+    if (egDecimal < 28 || egDecimal > 42 + 6/7) return setError(t('errGA_28'));
+    if (efw < 500 || efw > 6000) return setError(t('errEFW'));
+    if (tallaM < 130 || tallaM > 200) return setError(t('errHeight'));
+    if (pesoPreg < 35 || pesoPreg > 200) return setError(t('errWeight'));
 
     const res = computePercentile({
       egDecimal, efw, sexo, tallaM, pesoPreg, paridad, edad
@@ -39,15 +44,60 @@ export const FetalBmiCalculator: React.FC = () => {
     setResult(res);
   };
 
+  const handleExportPDF = () => {
+    if (!result) return;
+    exportFetalBmiPDF({ weeks, days: days === '' ? 0 : days, efw, sex: sexo, maternalHeight: tallaM, maternalWeight: pesoPreg, parity: paridad, maternalAge: edad }, result, language);
+  };
+
+  const renderChart = () => {
+    if (!result || sexo === '' || tallaM === '' || paridad === '' || weeks === '' || edad === '' || efw === '') return null;
+    const d = days === '' ? 0 : days;
+    const egDecimal = weeks + d / 7;
+
+    const z10 = normInv(0.10); const z90 = normInv(0.90);
+    const z3 = normInv(0.03); const z97 = normInv(0.97);
+
+    const gaValues: number[] = [];
+    for (let ga = 28; ga <= 42; ga += 0.5) gaValues.push(ga);
+
+    const p3: number[] = []; const p10: number[] = []; const p50: number[] = []; const p90: number[] = []; const p97: number[] = [];
+    gaValues.forEach(ga => {
+      const exp = expectedImcAtGa(ga, result.pesoCorr, tallaM as number, sexo as number, paridad as number, edad as number);
+      p3.push(Number((exp * (1 + z3 * CV_IMC)).toFixed(2)));
+      p10.push(Number((exp * (1 + z10 * CV_IMC)).toFixed(2)));
+      p50.push(Number(exp.toFixed(2)));
+      p90.push(Number((exp * (1 + z90 * CV_IMC)).toFixed(2)));
+      p97.push(Number((exp * (1 + z97 * CV_IMC)).toFixed(2)));
+    });
+
+    let closestIdx = 0; let minDiff = Infinity;
+    gaValues.forEach((ga, i) => { 
+      if (Math.abs(ga - egDecimal) < minDiff) { 
+        minDiff = Math.abs(ga - egDecimal); 
+        closestIdx = i; 
+      } 
+    });
+    
+    const caseData: (number | null)[] = new Array(gaValues.length).fill(null);
+    caseData[closestIdx] = Number(result.imcObs.toFixed(2));
+
+    return (
+      <div className="card" style={{ padding: 'var(--space-2xl)', marginTop: 'var(--space-xl)' }}>
+         <Typography variant="h3" className="text-green" style={{ marginBottom: 'var(--space-md)' }}>{t('h_chart')}</Typography>
+         <PercentileChart gaValues={gaValues} p3={p3} p10={p10} p50={p50} p90={p90} p97={p97} caseData={caseData} yAxisLabel={t('yAxisBmi')} />
+      </div>
+    );
+  };
+
   return (
     <div className="container" style={{ paddingBottom: 'var(--space-3xl)' }}>
       <div style={{ padding: 'var(--space-xl) 0', borderBottom: '1px solid var(--color-border)', marginBottom: 'var(--space-xl)' }}>
         <Typography variant="caption" className="text-gold">FETAL GROWTH</Typography>
         <Typography variant="h1" style={{ fontSize: '2.5rem', marginTop: 'var(--space-sm)' }}>
-          Customized Fetal BMI Calculator
+          {t('title_bmi')}
         </Typography>
         <Typography variant="body1" className="text-secondary" style={{ marginTop: 'var(--space-sm)' }}>
-          Prenatal nutritional status assessment through individualized fetal BMI percentiles.
+          {t('subtitle_bmi')}
         </Typography>
       </div>
 
@@ -57,55 +107,55 @@ export const FetalBmiCalculator: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
           
           <div className="card" style={{ padding: 'var(--space-lg)' }}>
-            <Typography variant="h3" className="text-green" style={{ marginBottom: 'var(--space-md)' }}>Fetal Data</Typography>
+            <Typography variant="h3" className="text-green" style={{ marginBottom: 'var(--space-md)' }}>{t('h_fetal')}</Typography>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)' }}>
               <div style={{ gridColumn: '1 / -1' }}>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Gestational Age</label>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>{t('lbl_ga')}</label>
                 <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
-                  <input type="number" placeholder="Weeks" value={weeks} onChange={e => setWeeks(e.target.value === '' ? '' : Number(e.target.value))} style={inputStyle} />
-                  <input type="number" placeholder="Days" value={days} onChange={e => setDays(e.target.value === '' ? '' : Number(e.target.value))} style={inputStyle} />
+                  <input type="number" placeholder={t('unit_weeks_28')} value={weeks} onChange={e => setWeeks(e.target.value === '' ? '' : Number(e.target.value))} style={inputStyle} />
+                  <input type="number" placeholder={t('unit_days')} value={days} onChange={e => setDays(e.target.value === '' ? '' : Number(e.target.value))} style={inputStyle} />
                 </div>
               </div>
               
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>EFW (g)</label>
-                <input type="number" value={efw} onChange={e => setEfw(e.target.value === '' ? '' : Number(e.target.value))} style={inputStyle} />
+                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>{t('lbl_efw')}</label>
+                <input type="number" placeholder={t('unit_efw')} value={efw} onChange={e => setEfw(e.target.value === '' ? '' : Number(e.target.value))} style={inputStyle} />
               </div>
               
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Fetal Sex</label>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>{t('lbl_sex')}</label>
                 <select value={sexo} onChange={e => setSexo(e.target.value === '' ? '' : Number(e.target.value))} style={inputStyle}>
-                  <option value="" disabled>Select...</option>
-                  <option value="1">Male</option>
-                  <option value="0">Female</option>
+                  <option value="" disabled>{t('opt_select')}</option>
+                  <option value="1">{t('opt_male')}</option>
+                  <option value="0">{t('opt_female')}</option>
                 </select>
               </div>
             </div>
           </div>
 
           <div className="card" style={{ padding: 'var(--space-lg)' }}>
-            <Typography variant="h3" className="text-green" style={{ marginBottom: 'var(--space-md)' }}>Maternal Data</Typography>
+            <Typography variant="h3" className="text-green" style={{ marginBottom: 'var(--space-md)' }}>{t('h_maternal')}</Typography>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Height (cm)</label>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>{t('lbl_height')} (cm)</label>
                 <input type="number" value={tallaM} onChange={e => setTallaM(e.target.value === '' ? '' : Number(e.target.value))} style={inputStyle} />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Pre-preg. Weight (kg)</label>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>{t('lbl_weight_mat')} (kg)</label>
                 <input type="number" step="0.1" value={pesoPreg} onChange={e => setPesoPreg(e.target.value === '' ? '' : Number(e.target.value))} style={inputStyle} />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Parity</label>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>{t('lbl_parity')}</label>
                 <select value={paridad} onChange={e => setParidad(e.target.value === '' ? '' : Number(e.target.value))} style={inputStyle}>
-                  <option value="" disabled>Select...</option>
-                  <option value="0">Nulliparous</option>
-                  <option value="1">Multiparous</option>
+                  <option value="" disabled>{t('opt_select')}</option>
+                  <option value="0">{t('opt_nulli')}</option>
+                  <option value="1">{t('opt_multi')}</option>
                 </select>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>Age (Years)</label>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>{t('lbl_age')} ({t('unit_age')})</label>
                 <input type="number" value={edad} onChange={e => setEdad(e.target.value === '' ? '' : Number(e.target.value))} style={inputStyle} />
               </div>
             </div>
@@ -116,38 +166,57 @@ export const FetalBmiCalculator: React.FC = () => {
             borderRadius: '6px', fontWeight: 'bold', border: 'none', cursor: 'pointer',
             transition: 'background 0.2s'
           }}>
-            Calculate Percentile
+            {t('btnCalc')}
           </button>
           
           {error && <Typography variant="body2" style={{ color: '#ef4444' }}>{error}</Typography>}
+          
+          <div style={{ marginTop: 'var(--space-md)', padding: 'var(--space-md)', borderTop: '1px solid var(--color-border)' }}>
+             <Typography variant="body2" style={{ color: 'var(--color-text-secondary)', fontStyle: 'italic', fontSize: '0.75rem' }}>
+                {t('info_method_bmi')}
+             </Typography>
+          </div>
         </div>
 
         {/* RESULTS COLUMN */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
           {result ? (
-             <div className="card" style={{ padding: 'var(--space-2xl)', textAlign: 'center', borderColor: getResultColor(result.classificationRaw) }}>
-                <Typography variant="h1" style={{ fontSize: '4rem', color: getResultColor(result.classificationRaw), marginBottom: 'var(--space-sm)' }}>
-                  P {result.percentil.toFixed(1)}
-                </Typography>
-                <Badge variant="solid" style={{ backgroundColor: getResultColor(result.classificationRaw), color: 'white' }}>
-                  {result.classificationRaw.toUpperCase()}
-                </Badge>
-                
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--space-md)', marginTop: 'var(--space-2xl)' }}>
-                  <div>
-                    <Typography variant="h3">{result.imcObs.toFixed(2)}</Typography>
-                    <Typography variant="caption">Observed BMI</Typography>
+             <>
+               <div className="card" style={{ padding: 'var(--space-2xl)', textAlign: 'center', borderColor: getResultColor(result.classificationRaw) }}>
+                  <Typography variant="caption" style={{ color: getResultColor(result.classificationRaw), fontWeight: 'bold' }}>
+                    {t('percentileLabel_bmi')}
+                  </Typography>
+                  <Typography variant="h1" style={{ fontSize: '4rem', color: getResultColor(result.classificationRaw), marginBottom: 'var(--space-sm)' }}>
+                    P {result.percentil.toFixed(1)}
+                  </Typography>
+                  <Badge variant="solid" style={{ backgroundColor: getResultColor(result.classificationRaw), color: 'white' }}>
+                    {t(getResultLocCode(result.classificationRaw))}
+                  </Badge>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--space-md)', marginTop: 'var(--space-2xl)' }}>
+                    <div>
+                      <Typography variant="h3">{result.imcObs.toFixed(2)}</Typography>
+                      <Typography variant="caption">{t('lbl_bmi_obs')}</Typography>
+                    </div>
+                    <div>
+                      <Typography variant="h3">{result.imcEst.toFixed(2)}</Typography>
+                      <Typography variant="caption">{t('lbl_bmi_exp')}</Typography>
+                    </div>
+                    <div>
+                      <Typography variant="h3">{result.z > 0 ? '+' : ''}{result.z.toFixed(2)}</Typography>
+                      <Typography variant="caption">{t('pdfZscore')}</Typography>
+                    </div>
                   </div>
-                  <div>
-                    <Typography variant="h3">{result.imcEst.toFixed(2)}</Typography>
-                    <Typography variant="caption">Expected BMI</Typography>
-                  </div>
-                  <div>
-                    <Typography variant="h3">{result.z > 0 ? '+' : ''}{result.z.toFixed(2)}</Typography>
-                    <Typography variant="caption">Z-Score</Typography>
-                  </div>
-                </div>
-             </div>
+               </div>
+               <button onClick={handleExportPDF} style={{ 
+                backgroundColor: 'var(--color-text-primary)', color: 'white', padding: '12px', 
+                borderRadius: '6px', fontWeight: 'bold', border: 'none', cursor: 'pointer',
+                transition: 'background 0.2s', marginTop: 'var(--space-md)'
+              }}>
+                {t('btnPdfText')}
+              </button>
+              {renderChart()}
+             </>
           ) : (
             <div className="card" style={{ padding: 'var(--space-3xl)', textAlign: 'center', opacity: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                <Typography variant="body1">Enter data and calculate to view customized percentile</Typography>
@@ -173,4 +242,11 @@ function getResultColor(c: string) {
   if (c === 'sga') return '#f97316';
   if (c === 'lga') return '#3b82f6';
   return '#10b981'; // aga
+}
+
+function getResultLocCode(c: string): keyof typeof import('../contexts/LanguageContext').translations.en {
+  if (c === 'iugr') return 'iugr';
+  if (c === 'sga') return 'peg';
+  if (c === 'lga') return 'geg';
+  return 'aeg';
 }

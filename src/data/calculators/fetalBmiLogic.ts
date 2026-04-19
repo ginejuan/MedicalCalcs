@@ -85,3 +85,11 @@ export function computePercentile(input: FetalBmiInput): FetalBmiResult {
 
   return { pesoCorr, pesoEst, tallaEst, imcEst, imcObs, z, percentil, classificationRaw };
 }
+
+export function expectedImcAtGa(ga: number, pesoCorr: number, tallaM: number, sexo: number, paridad: number, edad: number): number {
+  const p40 = peso40(pesoCorr, tallaM, sexo, paridad);
+  const t40 = talla40(pesoCorr, tallaM, sexo, edad);
+  const pesoEst = p40 * gardosiProp(ga) / gardosiProp(40);
+  const tallaEst = t40 * lengthProp(ga, sexo) / lengthProp(40, sexo);
+  return (pesoEst / 1000) / Math.pow(tallaEst / 100, 2);
+}

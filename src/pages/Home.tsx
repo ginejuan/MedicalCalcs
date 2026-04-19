@@ -2,8 +2,10 @@ import React from 'react';
 import { Typography } from '../components/ui/Typography';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export const Home: React.FC = () => {
+  const { t, language } = useLanguage();
   return (
     <div style={{ paddingBottom: 'var(--space-3xl)' }}>
       {/* Hero Section */}
@@ -16,12 +18,11 @@ export const Home: React.FC = () => {
         
         <div style={{ maxWidth: '800px', marginBottom: 'var(--space-2xl)' }}>
           <Typography variant="h1" style={{ fontSize: '3rem', lineHeight: 1.2, marginBottom: 'var(--space-md)' }}>
-            Evidence-based calculators for <br/>
-            <span className="italic text-gold">modern clinical practice</span>
+            {language === 'en' ? 'Evidence-based calculators for' : 'Calculadoras basadas en evidencia para'}<br/>
+            <span className="italic text-gold">{language === 'en' ? 'modern clinical practice' : 'la práctica clínica moderna'}</span>
           </Typography>
           <Typography variant="body1" className="text-secondary" style={{ fontSize: '1.1rem', maxWidth: '600px' }}>
-            Open-access, peer-reviewed tools for perinatology, gynecological oncology,
-            and endocrinology. Designed for clinical use and validated for scientific citation.
+            {language === 'en' ? 'Open-access, peer-reviewed tools for perinatology, gynecological oncology, and endocrinology. Designed for clinical use and validated for scientific citation.' : 'Herramientas revisadas por pares de acceso abierto para perinatología, oncología ginecológica y endocrinología. Diseñadas para uso clínico y validadas.'}
           </Typography>
         </div>
 
@@ -69,21 +70,21 @@ export const Home: React.FC = () => {
         }}>
           <Card 
             category="FETAL GROWTH"
-            title="Customized Fetal Weight Calculator"
-            description="Calculates individualized estimated fetal weight percentiles adjusted for maternal anthropometric characteristics, using customized growth curves (CV = 12%)."
+            title={t('title_fw')}
+            description={t('fetalWeightCalcDesc')}
             link="/fetal-weight"
             activeBorder={true}
           />
           <Card 
             category="FETAL GROWTH"
-            title="Customized Fetal BMI Calculator"
-            description="Assesses prenatal nutritional status through individualized fetal BMI percentile curves adjusted for maternal pre-pregnancy BMI (CV = 9.7%)."
+            title={t('title_bmi')}
+            description={t('fetalBmiCalcDesc')}
             link="/fetal-bmi"
           />
           <Card 
             category="NEONATAL STANDARDS"
-            title="INTERGROWTH-21st Weight Percentile"
-            description="Classifies neonatal and fetal weight against international population-based standards (33+0 to 42+6 weeks). No maternal adjustment required."
+            title={t('title_ig')}
+            description={t('intergrowthCalcDesc')}
             link="/intergrowth21"
           />
         </div>
