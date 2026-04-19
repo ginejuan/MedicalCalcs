@@ -94,6 +94,7 @@ export const translations = {
     pdfExpWt: 'Expected weight',
     pdfZscore: 'Z-score',
     info_method_fw: 'Methodology: Coefficient of variation (CV) = 12%. Maternal pre-pregnancy weight is corrected for underweight (BMI < 18.5 kg/m²) and obesity (BMI ≥ 30 kg/m²).',
+    empty_fw: 'Enter data and calculate to view customized percentile',
     
     // Specifics - Fetal BMI
     title_bmi: 'Customized Fetal BMI Percentile Calculator',
@@ -105,6 +106,7 @@ export const translations = {
     pdfObsBMI: 'Observed fetal BMI',
     pdfExpBMI: 'Expected fetal BMI',
     info_method_bmi: 'Methodology: Coefficient of variation (CV) = 9.7%. Maternal pre-pregnancy weight is corrected for underweight (BMI < 18.5 kg/m²) and obesity (BMI ≥ 30 kg/m²).',
+    empty_bmi: 'Enter data and calculate to view customized percentile',
     
     // Specifics - Intergrowth 21
     title_ig: 'INTERGROWTH-21st Weight Percentile Calculator',
@@ -116,6 +118,7 @@ export const translations = {
     pdfP50: 'P50 reference',
     pdfRatio: 'Weight / P50',
     info_text_ig: 'Population-based standard. No maternal adjustment. Reference range: 33+0 to 42+6 weeks.',
+    empty_ig: 'Enter data and calculate to view INTERGROWTH-21st percentile',
     
     // Disclaimer
     disc_title: 'Terms of use:',
@@ -197,6 +200,7 @@ export const translations = {
     pdfExpWt: 'Peso esperado',
     pdfZscore: 'Z-score',
     info_method_fw: 'Metodología: Coeficiente de variación (CV) = 12%. El peso materno pregestacional se corrige por infrapeso (IMC < 18.5 kg/m²) y obesidad (IMC ≥ 30 kg/m²).',
+    empty_fw: 'Introduzca los datos y calcule para ver el percentil customizado',
     
     title_bmi: 'Calculadora de Percentil de IMC Fetal Customizado',
     subtitle_bmi: 'Evaluación prenatal del estado nutricional',
@@ -207,6 +211,7 @@ export const translations = {
     pdfObsBMI: 'IMC fetal observado',
     pdfExpBMI: 'IMC fetal esperado',
     info_method_bmi: 'Metodología: Coeficiente de variación (CV) = 9.7%. El peso materno pregestacional se corrige por infrapeso (IMC < 18.5 kg/m²) y obesidad (IMC ≥ 30 kg/m²).',
+    empty_bmi: 'Introduzca los datos y calcule para ver el percentil customizado',
     
     title_ig: 'Calculadora de Percentil de Peso INTERGROWTH-21st',
     subtitle_ig: 'Estándares internacionales de tamaño neonatal',
@@ -217,6 +222,7 @@ export const translations = {
     pdfP50: 'P50 referencia',
     pdfRatio: 'Peso / P50',
     info_text_ig: 'Estándar poblacional. Sin ajuste materno. Rango de referencia: 33+0 a 42+6 semanas.',
+    empty_ig: 'Introduzca los datos y calcule para ver el percentil INTERGROWTH-21st',
     
     disc_title: 'Términos de uso:',
     disc_text: 'Esta calculadora está diseñada para uso exclusivo por profesionales sanitarios. Si no es su caso, rogamos no la utilice. La información arrojada debe ser siempre interpretada por un profesional y no sustituye la consulta médica ni ninguna actuación diagnóstica ni terapéutica. Los autores no se hacen responsables del uso inapropiado de la misma.',

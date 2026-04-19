@@ -235,7 +235,7 @@ export const FetalWeightCalculator: React.FC = () => {
              </>
           ) : (
             <div className="card" style={{ padding: 'var(--space-3xl)', textAlign: 'center', opacity: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-               <Typography variant="body1">Enter data and calculate to view customized percentile</Typography>
+               <Typography variant="body1">{t('empty_fw')}</Typography>
             </div>
           )}
         </div>
