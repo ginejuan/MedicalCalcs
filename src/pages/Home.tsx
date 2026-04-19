@@ -16,12 +16,12 @@ export const Home: React.FC = () => {
           </Typography>
         </div>
         
-        <div style={{ maxWidth: '800px', marginBottom: 'var(--space-2xl)' }}>
+        <div style={{ maxWidth: '1000px', marginBottom: 'var(--space-2xl)' }}>
           <Typography variant="h1" style={{ fontSize: '3rem', lineHeight: 1.2, marginBottom: 'var(--space-md)' }}>
-            {language === 'en' ? 'Evidence-based calculators for' : 'Calculadoras basadas en evidencia para'}<br/>
+            {language === 'en' ? 'Evidence-based calculators for ' : 'Calculadoras basadas en evidencia para '}
             <span className="italic text-gold">{language === 'en' ? 'modern clinical practice' : 'la práctica clínica moderna'}</span>
           </Typography>
-          <Typography variant="body1" className="text-secondary" style={{ fontSize: '1.1rem', maxWidth: '600px' }}>
+          <Typography variant="body1" className="text-secondary" style={{ fontSize: '1.1rem', maxWidth: '800px' }}>
             {language === 'en' ? 'Open-access, peer-reviewed tools for perinatology, gynecological oncology, and endocrinology. Designed for clinical use and validated for scientific citation.' : 'Herramientas revisadas por pares de acceso abierto para perinatología, oncología ginecológica y endocrinología. Diseñadas para uso clínico y validadas.'}
           </Typography>
         </div>
