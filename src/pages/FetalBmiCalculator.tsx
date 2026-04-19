@@ -230,7 +230,7 @@ export const FetalBmiCalculator: React.FC = () => {
                   </div>
                </div>
                <button onClick={handleExportPDF} style={{ 
-                backgroundColor: 'var(--color-text-primary)', color: 'white', padding: '12px', 
+                backgroundColor: '#546E7A', color: 'white', padding: '12px', 
                 borderRadius: '6px', fontWeight: 'bold', border: 'none', cursor: 'pointer',
                 transition: 'background 0.2s', marginTop: 'var(--space-md)'
               }}>
