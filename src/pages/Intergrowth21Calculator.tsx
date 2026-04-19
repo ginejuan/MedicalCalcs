@@ -100,7 +100,7 @@ export const Intergrowth21Calculator: React.FC = () => {
         </Typography>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) minmax(300px, 1fr)', gap: 'var(--space-xl)', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) 2fr', gap: 'var(--space-2xl)', alignItems: 'start' }}>
         
         {/* INPUTS COLUMN */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
@@ -109,11 +109,18 @@ export const Intergrowth21Calculator: React.FC = () => {
             <Typography variant="h3" className="text-green" style={{ marginBottom: 'var(--space-md)' }}>{t('h_data')}</Typography>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 'var(--space-md)' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>{t('lbl_ga')}</label>
-                <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
-                  <input type="number" placeholder={t('unit_weeks_33')} value={weeks} onChange={e => setWeeks(e.target.value === '' ? '' : Number(e.target.value))} style={inputStyle} />
-                  <input type="number" placeholder={t('unit_days')} value={days} onChange={e => setDays(e.target.value === '' ? '' : Number(e.target.value))} style={inputStyle} />
+              <div style={{ gridColumn: '1 / -1' }}>
+                <Typography variant="caption" style={{ display: 'block', color: 'var(--color-text-secondary)', marginBottom: '8px', textTransform: 'uppercase' }}>{t('lbl_ga')}</Typography>
+                <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
+                  <div style={{ flex: 1 }}>
+                    <input type="number" value={weeks} onChange={e => setWeeks(e.target.value === '' ? '' : Number(e.target.value))} style={inputStyle} />
+                    <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: '4px' }}>{t('unit_weeks_33')}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-text-secondary)', marginTop: '-15px' }}>+</div>
+                  <div style={{ flex: 1 }}>
+                    <input type="number" value={days} onChange={e => setDays(e.target.value === '' ? '' : Number(e.target.value))} style={inputStyle} />
+                    <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: '4px' }}>{t('unit_days')}</span>
+                  </div>
                 </div>
               </div>
               

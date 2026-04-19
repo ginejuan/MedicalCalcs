@@ -24,6 +24,18 @@ ChartJS.register(
   Filler
 );
 
+const whiteBackgroundPlugin = {
+  id: 'customCanvasBackgroundColor',
+  beforeDraw: (chart: any, args: any, options: any) => {
+    const {ctx} = chart;
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-over';
+    ctx.fillStyle = options.color || '#white';
+    ctx.fillRect(0, 0, chart.width, chart.height);
+    ctx.restore();
+  }
+};
+
 interface PercentileChartProps {
   gaValues: number[];
   p3: number[];
@@ -134,6 +146,9 @@ export const PercentileChart: React.FC<PercentileChartProps> = ({
           label: (ctx: any) => (ctx.raw === null ? undefined : `${ctx.dataset.label}: ${ctx.raw}`),
         },
       },
+      customCanvasBackgroundColor: {
+        color: 'white',
+      }
     },
     scales: {
       x: {
@@ -150,8 +165,8 @@ export const PercentileChart: React.FC<PercentileChartProps> = ({
   };
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '400px' }}>
-      <Line ref={chartRef} id="percentile-chart-canvas" data={data} options={options} />
+    <div style={{ position: 'relative', width: '100%', height: '350px' }}>
+      <Line ref={chartRef} id="percentile-chart-canvas" data={data} options={options} plugins={[whiteBackgroundPlugin]} />
     </div>
   );
 };
