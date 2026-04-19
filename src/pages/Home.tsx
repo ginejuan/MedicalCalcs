@@ -18,8 +18,9 @@ export const Home: React.FC = () => {
         
         <div style={{ maxWidth: '1000px', marginBottom: 'var(--space-2xl)' }}>
           <Typography variant="h1" style={{ fontSize: '3rem', lineHeight: 1.2, marginBottom: 'var(--space-md)' }}>
-            {language === 'en' ? 'Evidence-based calculators for ' : 'Calculadoras basadas en evidencia para '}
-            <span className="italic text-gold">{language === 'en' ? 'modern clinical practice' : 'la práctica clínica moderna'}</span>
+            {language === 'en' ? 'Evidence-based calculators for' : 'Calculadoras basadas en evidencia para'}
+            <br/>
+            <span className="italic text-gold">{language === 'en' ? 'clinical practice' : 'práctica clínica'}</span>
           </Typography>
           <Typography variant="body1" className="text-secondary" style={{ fontSize: '1.1rem', maxWidth: '800px' }}>
             {language === 'en' ? 'Open-access, peer-reviewed tools for perinatology, gynecological oncology, and endocrinology. Designed for clinical use and validated for scientific citation.' : 'Herramientas revisadas por pares de acceso abierto para perinatología, oncología ginecológica y endocrinología. Diseñadas para uso clínico y validadas.'}
