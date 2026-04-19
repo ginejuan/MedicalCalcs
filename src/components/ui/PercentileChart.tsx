@@ -131,7 +131,7 @@ export const PercentileChart: React.FC<PercentileChartProps> = ({
       tooltip: {
         callbacks: {
           title: (items: any) => t('tooltipWeek') + ' ' + items[0].label,
-          label: (ctx: any) => (ctx.raw === null ? null : `${ctx.dataset.label}: ${ctx.raw}`),
+          label: (ctx: any) => (ctx.raw === null ? undefined : `${ctx.dataset.label}: ${ctx.raw}`),
         },
       },
     },
