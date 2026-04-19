@@ -90,7 +90,7 @@ export const FetalWeightCalculator: React.FC = () => {
 
   return (
     <div className="container" style={{ paddingBottom: 'var(--space-3xl)' }}>
-      <div style={{ padding: 'var(--space-xl) 0', borderBottom: '1px solid var(--color-border)', marginBottom: 'var(--space-xl)' }}>
+      <div style={{ paddingTop: 'var(--space-sm)', paddingBottom: 'var(--space-xl)', borderBottom: '1px solid var(--color-border)', marginBottom: 'var(--space-xl)' }}>
         <Typography variant="caption" className="text-gold" style={{ letterSpacing: '0.05em' }}>FETAL GROWTH</Typography>
         <Typography variant="h1" style={{ fontSize: '2rem', marginTop: 'var(--space-xs)' }}>
           {t('title_fw')}
