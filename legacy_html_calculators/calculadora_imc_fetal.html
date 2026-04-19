@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customized Fetal BMI Calculator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --primary: #1565C0;
+    --primary-light: #E3F2FD;
+    --accent: #C62828;
+    --green: #2E7D32;
+    --gray: #546E7A;
+    --bg: #FAFAFA;
+    --card: #FFFFFF;
+    --border: #E0E0E0;
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: #263238;
+    line-height: 1.5;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    padding: 22px 16px 14px;
+    background: linear-gradient(135deg, var(--primary), #0D47A1);
+    color: white;
+  }
+  header h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 4px; }
+  header p.subtitle { font-size: 0.85rem; opacity: 0.8; }
+  .header-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    font-size: 0.65rem;
+    opacity: 0.6;
+    line-height: 1.4;
+  }
+  .header-meta a { color: white; text-decoration: none; }
+  .header-meta a:hover { text-decoration: underline; opacity: 1; }
+  .header-ref { text-align: left; max-width: 70%; }
+  .header-copy { text-align: right; white-space: nowrap; }
+  .lang-toggle {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+  }
+  .lang-toggle:hover { background: rgba(255,255,255,0.25); }
+  .header-wrap { position: relative; }
+
+  /* Main layout */
+  .main-layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 16px;
+    align-items: start;
+  }
+  @media (max-width: 860px) {
+    .main-layout { grid-template-columns: 1fr; }
+  }
+
+  .left-col { display: flex; flex-direction: column; gap: 16px; }
+
+  .card {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .card h2 {
+    font-size: 1rem;
+    color: var(--primary);
+    margin-bottom: 14px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--primary-light);
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .form-group { display: flex; flex-direction: column; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-group label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--gray);
+    margin-bottom: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .form-group input, .form-group select {
+    padding: 9px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+    background: #FAFAFA;
+  }
+  .form-group input:focus, .form-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(21,101,192,0.1);
+  }
+  .form-group .unit { font-size: 0.72rem; color: #90A4AE; margin-top: 2px; }
+
+  .ga-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 8px;
+    align-items: start;
+  }
+  .ga-row > div { display: flex; flex-direction: column; }
+  .ga-row .ga-plus {
+    font-size: 1.2rem;
+    color: var(--gray);
+    padding-top: 8px;
+    text-align: center;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 11px 24px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    width: 100%;
+  }
+  .btn:hover { background: #0D47A1; }
+  .btn:active { transform: scale(0.98); }
+
+  .btn-secondary {
+    background: #546E7A;
+    font-size: 0.85rem;
+    padding: 9px 18px;
+    margin-top: 8px;
+  }
+  .btn-secondary:hover { background: #37474F; }
+
+  .error-msg {
+    color: var(--accent);
+    font-size: 0.83rem;
+    margin-top: 6px;
+    display: none;
+  }
+  .error-msg.show { display: block; }
+
+  /* Result panel */
+  .result-panel {
+    display: none;
+    padding: 18px;
+    border-radius: 10px;
+    text-align: center;
+  }
+  .result-panel.show { display: block; }
+  .result-panel .percentile-value {
+    font-size: 2.6rem;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  .result-panel .percentile-label {
+    font-size: 0.88rem;
+    margin-top: 3px;
+    opacity: 0.85;
+  }
+  .result-panel .classification {
+    display: inline-block;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-top: 8px;
+  }
+  .result-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+    text-align: center;
+  }
+  .detail-box {
+    background: rgba(255,255,255,0.6);
+    border-radius: 7px;
+    padding: 10px 6px;
+  }
+  .detail-box .val { font-size: 1.15rem; font-weight: 700; color: #263238; }
+  .detail-box .lbl { font-size: 0.7rem; color: var(--gray); text-transform: uppercase; }
+
+  .iugr { background: #FFEBEE; color: #B71C1C; }
+  .iugr .percentile-value { color: #C62828; }
+  .iugr .classification { background: #C62828; color: white; }
+  .peg { background: #FFF3E0; color: #E65100; }
+  .peg .percentile-value { color: #E65100; }
+  .peg .classification { background: #E65100; color: white; }
+  .aeg { background: #E8F5E9; color: #1B5E20; }
+  .aeg .percentile-value { color: #2E7D32; }
+  .aeg .classification { background: #2E7D32; color: white; }
+  .geg { background: #E3F2FD; color: #0D47A1; }
+  .geg .percentile-value { color: #1565C0; }
+  .geg .classification { background: #1565C0; color: white; }
+
+  /* Right column / chart */
+  .right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .chart-wrapper {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    display: none;
+  }
+  .chart-wrapper.show { display: block; }
+  .chart-wrapper h2 {
+    font-size: 1rem;
+    color: var(--primary);
+    margin-bottom: 12px;
+  }
+  .chart-container { position: relative; width: 100%; height: 400px; }
+
+  .disclaimer {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px 20px;
+    font-size: 0.8rem;
+    color: #546E7A;
+    line-height: 1.5;
+    font-style: italic;
+  }
+  .disclaimer strong { font-style: italic; color: #263238; }
+
+  .ref {
+    font-size: 0.75rem;
+    color: #90A4AE;
+    text-align: center;
+    padding: 12px 16px 20px;
+    line-height: 1.6;
+  }
+  .ref a { color: var(--primary); text-decoration: none; }
+
+  /* PDF export area (hidden, used for rendering) */
+  #pdfContent { position: absolute; left: -9999px; top: 0; width: 800px; }
+  #pdfContent.rendering { position: static; left: auto; }
+</style>
+</head>
+<body>
+<div class="header-wrap">
+  <header>
+    <h1 id="title">Customized Fetal BMI Percentile Calculator</h1>
+    <p class="subtitle" id="subtitle">Prenatal nutritional status assessment</p>
+    <button class="lang-toggle" id="langBtn" onclick="toggleLang()">ES</button>
+    <div class="header-meta">
+      <div class="header-ref">Fern&aacute;ndez Alba JJ, Castillo Lara M, Jim&eacute;nez Heras JM, et al. <em>Diagnostics.</em> 2025;15(7):877. <a href="https://doi.org/10.3390/diagnostics15070877" target="_blank">doi:10.3390/diagnostics15070877</a></div>
+      <div class="header-copy">&copy; 2026 Juan Jes&uacute;s Fern&aacute;ndez Alba</div>
+    </div>
+  </header>
+</div>
+
+<div class="main-layout">
+  <!-- LEFT COLUMN: inputs + results -->
+  <div class="left-col">
+    <div class="card">
+      <h2 id="h_fetal">Fetal data</h2>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label id="lbl_ga" for="eg_weeks">Gestational age</label>
+          <div class="ga-row">
+            <div>
+              <input type="number" id="eg_weeks" min="28" max="42" step="1" placeholder="37">
+              <span class="unit" id="unit_weeks">Weeks (28–42)</span>
+            </div>
+            <div class="ga-plus">+</div>
+            <div>
+              <input type="number" id="eg_days" min="0" max="6" step="1" placeholder="0">
+              <span class="unit" id="unit_days">Days (0–6)</span>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label id="lbl_efw" for="efw">Estimated fetal weight</label>
+          <input type="number" id="efw" min="500" max="6000" step="1" placeholder="2800">
+          <span class="unit" id="unit_efw">Grams (ultrasound)</span>
+        </div>
+        <div class="form-group">
+          <label id="lbl_sex" for="sexo">Fetal sex</label>
+          <select id="sexo">
+            <option value="" disabled selected id="opt_select">Select...</option>
+            <option value="1" id="opt_male">Male</option>
+            <option value="0" id="opt_female">Female</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 id="h_maternal">Maternal data</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label id="lbl_height" for="talla_m">Maternal height</label>
+          <input type="number" id="talla_m" min="130" max="200" step="1" placeholder="163">
+          <span class="unit">cm</span>
+        </div>
+        <div class="form-group">
+          <label id="lbl_weight" for="peso_preg">Weight at start of pregnancy</label>
+          <input type="number" id="peso_preg" min="35" max="200" step="0.1" placeholder="65.0">
+          <span class="unit">kg</span>
+        </div>
+        <div class="form-group">
+          <label id="lbl_parity" for="paridad">Parity</label>
+          <select id="paridad">
+            <option value="" disabled selected id="opt_parity_select">Select...</option>
+            <option value="0" id="opt_nulli">Nulliparous</option>
+            <option value="1" id="opt_multi">Multiparous</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label id="lbl_age" for="edad">Maternal age</label>
+          <input type="number" id="edad" min="14" max="55" step="1" placeholder="32">
+          <span class="unit" id="unit_age">Years</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn" id="btnCalc" onclick="calcular()">Calculate percentile</button>
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div class="card" style="font-size:0.82rem; color:#546E7A; line-height:1.5;">
+      <p id="info_method">Methodology: Coefficient of variation (CV) = 9.7%. Maternal pre-pregnancy weight is corrected for underweight (BMI &lt; 18.5 kg/m&sup2;) and obesity (BMI &ge; 30 kg/m&sup2;).</p>
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN: results + chart -->
+  <div class="right-col">
+    <div class="result-panel" id="resultPanel">
+      <div class="percentile-value" id="percentileValue"></div>
+      <div class="percentile-label" id="percentileLabel">Customized fetal BMI percentile</div>
+      <div class="classification" id="classification"></div>
+      <div class="result-details">
+        <div class="detail-box">
+          <div class="val" id="imcObs">—</div>
+          <div class="lbl" id="lbl_bmi_obs">Observed fetal BMI</div>
+        </div>
+        <div class="detail-box">
+          <div class="val" id="imcEsperado">—</div>
+          <div class="lbl" id="lbl_bmi_exp">Expected fetal BMI</div>
+        </div>
+        <div class="detail-box">
+          <div class="val" id="zScore">—</div>
+          <div class="lbl">Z-score</div>
+        </div>
+      </div>
+      <button class="btn btn-secondary" id="btnPdf" onclick="exportPDF()" style="margin-top:12px">
+        <span id="btnPdfText">Export to PDF</span>
+      </button>
+    </div>
+
+    <div class="chart-wrapper" id="chartCard">
+      <h2 id="h_chart">Customized percentile curves</h2>
+      <div class="chart-container">
+        <canvas id="chart" height="400"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="disclaimer" id="disclaimer">
+  <strong id="disc_title">Terms of use:</strong>
+  <span id="disc_text">This calculator is designed for exclusive use by healthcare professionals. If this is not your case, please do not use it. The information provided must always be interpreted by a professional and should not replace medical consultation or any diagnostic or therapeutic procedure. The authors are not responsible for inappropriate use of this calculator.</span>
+</div>
+
+<script>
+// ============================================================
+// I18N
+// ============================================================
+let lang = 'en';
+const T = {
+  en: {
+    title: 'Customized Fetal BMI Percentile Calculator',
+    subtitle: 'Prenatal nutritional status assessment',
+    h_fetal: 'Fetal data',
+    lbl_ga: 'Gestational age',
+    unit_weeks: 'Weeks (28–42)',
+    unit_days: 'Days (0–6)',
+    lbl_efw: 'Estimated fetal weight',
+    unit_efw: 'Grams (ultrasound)',
+    lbl_sex: 'Fetal sex',
+    opt_select: 'Select...',
+    opt_male: 'Male',
+    opt_female: 'Female',
+    h_maternal: 'Maternal data',
+    lbl_height: 'Maternal height',
+    lbl_weight: 'Weight at start of pregnancy',
+    lbl_parity: 'Parity',
+    opt_parity_select: 'Select...',
+    opt_nulli: 'Nulliparous',
+    opt_multi: 'Multiparous',
+    lbl_age: 'Maternal age',
+    unit_age: 'Years',
+    btnCalc: 'Calculate percentile',
+    percentileLabel: 'Customized fetal BMI percentile',
+    lbl_bmi_obs: 'Observed fetal BMI',
+    lbl_bmi_exp: 'Expected fetal BMI',
+    h_chart: 'Customized percentile curves',
+    btnPdfText: 'Export to PDF',
+    iugr: 'IUGR — Intrauterine growth restriction',
+    peg: 'SGA — Small for gestational age',
+    aeg: 'AGA — Appropriate for gestational age',
+    geg: 'LGA — Large for gestational age',
+    xAxis: 'Gestational age (weeks)',
+    yAxis: 'Fetal BMI (kg/m\u00B2)',
+    tooltipWeek: 'Week',
+    caseLabel: 'Current case',
+    errFill: 'Please complete all fields.',
+    errGA: 'Gestational age must be between 28+0 and 42+6.',
+    errEFW: 'Estimated fetal weight must be between 500 and 6000 g.',
+    errHeight: 'Maternal height must be between 130 and 200 cm.',
+    errWeight: 'Weight must be between 35 and 200 kg.',
+    langBtn: 'ES',
+    pdfTitle: 'Customized Fetal BMI Report',
+    pdfGA: 'Gestational age',
+    pdfEFW: 'Estimated fetal weight',
+    pdfSex: 'Sex',
+    pdfMaternalHeight: 'Maternal height',
+    pdfMaternalWeight: 'Weight at start of pregnancy',
+    pdfParity: 'Parity',
+    pdfAge: 'Maternal age',
+    pdfPercentile: 'Percentile',
+    pdfClassification: 'Classification',
+    pdfObsBMI: 'Observed fetal BMI',
+    pdfExpBMI: 'Expected fetal BMI',
+    pdfZscore: 'Z-score',
+    pdfMale: 'Male', pdfFemale: 'Female',
+    pdfNulli: 'Nulliparous', pdfMulti: 'Multiparous',
+    info_method: 'Methodology: Coefficient of variation (CV) = 9.7%. Maternal pre-pregnancy weight is corrected for underweight (BMI < 18.5 kg/m\u00B2) and obesity (BMI \u2265 30 kg/m\u00B2).',
+    disc_title: 'Terms of use:',
+    disc_text: 'This calculator is designed for exclusive use by healthcare professionals. If this is not your case, please do not use it. The information provided must always be interpreted by a professional and should not replace medical consultation or any diagnostic or therapeutic procedure. The authors are not responsible for inappropriate use of this calculator.',
+  },
+  es: {
+    title: 'Calculadora de Percentil de IMC Fetal Customizado',
+    subtitle: 'Evaluaci\u00F3n prenatal del estado nutricional',
+    h_fetal: 'Datos fetales',
+    lbl_ga: 'Edad gestacional',
+    unit_weeks: 'Semanas (28–42)',
+    unit_days: 'D\u00EDas (0–6)',
+    lbl_efw: 'Peso fetal estimado',
+    unit_efw: 'Gramos (ecograf\u00EDa)',
+    lbl_sex: 'Sexo fetal',
+    opt_select: 'Seleccionar...',
+    opt_male: 'Var\u00F3n',
+    opt_female: 'Mujer',
+    h_maternal: 'Datos maternos',
+    lbl_height: 'Talla materna',
+    lbl_weight: 'Peso al inicio de la gestaci\u00F3n',
+    lbl_parity: 'Paridad',
+    opt_parity_select: 'Seleccionar...',
+    opt_nulli: 'Nul\u00EDpara',
+    opt_multi: 'Mult\u00EDpara',
+    lbl_age: 'Edad materna',
+    unit_age: 'A\u00F1os',
+    btnCalc: 'Calcular percentil',
+    percentileLabel: 'Percentil de IMC fetal customizado',
+    lbl_bmi_obs: 'IMC fetal observado',
+    lbl_bmi_exp: 'IMC fetal esperado',
+    h_chart: 'Curvas de percentiles customizados',
+    btnPdfText: 'Exportar a PDF',
+    iugr: 'CIR \u2014 Crecimiento intrauterino restringido',
+    peg: 'PEG \u2014 Peque\u00F1o para la edad gestacional',
+    aeg: 'AEG \u2014 Adecuado para la edad gestacional',
+    geg: 'GEG \u2014 Grande para la edad gestacional',
+    xAxis: 'Edad gestacional (semanas)',
+    yAxis: 'IMC fetal (kg/m\u00B2)',
+    tooltipWeek: 'Semana',
+    caseLabel: 'Caso actual',
+    errFill: 'Por favor, complete todos los campos.',
+    errGA: 'La edad gestacional debe estar entre 28+0 y 42+6.',
+    errEFW: 'El peso fetal estimado debe estar entre 500 y 6000 g.',
+    errHeight: 'La talla materna debe estar entre 130 y 200 cm.',
+    errWeight: 'El peso debe estar entre 35 y 200 kg.',
+    langBtn: 'EN',
+    pdfTitle: 'Informe de IMC Fetal Customizado',
+    pdfGA: 'Edad gestacional',
+    pdfEFW: 'Peso fetal estimado',
+    pdfSex: 'Sexo',
+    pdfMaternalHeight: 'Talla materna',
+    pdfMaternalWeight: 'Peso al inicio de la gestaci\u00F3n',
+    pdfParity: 'Paridad',
+    pdfAge: 'Edad materna',
+    pdfPercentile: 'Percentil',
+    pdfClassification: 'Clasificaci\u00F3n',
+    pdfObsBMI: 'IMC fetal observado',
+    pdfExpBMI: 'IMC fetal esperado',
+    pdfZscore: 'Z-score',
+    pdfMale: 'Var\u00F3n', pdfFemale: 'Mujer',
+    pdfNulli: 'Nul\u00EDpara', pdfMulti: 'Mult\u00EDpara',
+    info_method: 'Metodolog\u00EDa: Coeficiente de variaci\u00F3n (CV) = 9,7%. El peso materno pregestacional se corrige por infrapeso (IMC < 18,5 kg/m\u00B2) y obesidad (IMC \u2265 30 kg/m\u00B2).',
+    disc_title: 'Condiciones de uso:',
+    disc_text: 'Esta calculadora se ha dise\u00F1ado para uso exclusivo por profesionales de la salud. Si este no es su caso, por favor, no la use. La informaci\u00F3n ofrecida debe ser siempre interpretada por un profesional y no debe reemplazar la consulta m\u00E9dica o cualquier diagn\u00F3stico o procedimiento terap\u00E9utico. Los autores no se hacen responsables del uso inapropiado de esta calculadora.',
+  }
+};
+
+function t(key) { return T[lang][key] || T['en'][key] || key; }
+
+function toggleLang() {
+  lang = lang === 'en' ? 'es' : 'en';
+  applyLang();
+  if (lastResult) redrawChart();
+}
+
+function applyLang() {
+  const ids = ['title','subtitle','h_fetal','lbl_ga','unit_weeks','unit_days','lbl_efw','unit_efw',
+    'lbl_sex','opt_select','opt_male','opt_female','h_maternal','lbl_height','lbl_weight',
+    'lbl_parity','opt_parity_select','opt_nulli','opt_multi','lbl_age','unit_age','btnCalc',
+    'percentileLabel','lbl_bmi_obs','lbl_bmi_exp','h_chart','btnPdfText','langBtn',
+    'disc_title','disc_text','info_method'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = t(id);
+  });
+  document.documentElement.lang = lang === 'es' ? 'es' : 'en';
+  // Update classification if result is showing
+  if (lastResult) updateClassificationText(lastResult.percentil);
+}
+
+function classKey(pct) {
+  if (pct < 3) return 'iugr';
+  if (pct < 10) return 'peg';
+  if (pct > 90) return 'geg';
+  return 'aeg';
+}
+
+function updateClassificationText(pct) {
+  document.getElementById('classification').textContent = t(classKey(pct));
+}
+
+// ============================================================
+// MODEL COEFFICIENTS (Fernández Alba et al., Diagnostics 2025)
+// ============================================================
+const CV_IMC = 0.097;
+
+function peso40(pc, tM, sex, par) { return 1597.43 + 6.71*pc + 7.59*tM + 121.27*sex + 41.19*par; }
+function talla40(pc, tM, sex, age) { return 41.075 + 0.020*pc + 0.040*tM + 0.791*sex + 0.014*age; }
+function gardosiProp(eg) { return 299.1 - 31.85*eg + 1.094*eg*eg - 0.01055*eg*eg*eg; }
+function lengthProp(eg, sex) {
+  return sex === 1
+    ? -71.79 + 8.06*eg - 0.12*eg*eg + 0.00056*eg*eg*eg
+    : -72.46 + 8.19*eg - 0.12*eg*eg + 0.0006*eg*eg*eg;
+}
+
+function corregirPeso(pesoKg, tallaCm) {
+  const tM = tallaCm / 100;
+  const imc = pesoKg / (tM * tM);
+  if (imc >= 30) return 30 * tM * tM;
+  if (imc < 18.5) return 18.5 * tM * tM;
+  return pesoKg;
+}
+
+// Standard normal CDF (Abramowitz & Stegun)
+function normCdf(x) {
+  const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+  const sign = x < 0 ? -1 : 1;
+  x = Math.abs(x) / Math.sqrt(2);
+  const tt = 1 / (1 + p * x);
+  const y = 1 - (((((a5*tt+a4)*tt)+a3)*tt+a2)*tt+a1)*tt*Math.exp(-x*x);
+  return 0.5 * (1 + sign * y);
+}
+
+// Inverse normal CDF
+function normInv(p) {
+  if (p<=0) return -Infinity; if (p>=1) return Infinity; if (p===0.5) return 0;
+  const a=[-3.969683028665376e1,2.209460984245205e2,-2.759285104469687e2,1.383577518672690e2,-3.066479806614716e1,2.506628277459239e0];
+  const b=[-5.447609879822406e1,1.615858368580409e2,-1.556989798598866e2,6.680131188771972e1,-1.328068155288572e1];
+  const c=[-7.784894002430293e-3,-3.223964580411365e-1,-2.400758277161838e0,-2.549732539343734e0,4.374664141464968e0,2.938163982698783e0];
+  const d=[7.784695709041462e-3,3.224671290700398e-1,2.445134137142996e0,3.754408661907416e0];
+  const pLow=0.02425,pHigh=1-pLow; let q,r;
+  if(p<pLow){q=Math.sqrt(-2*Math.log(p));return(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+  else if(p<=pHigh){q=p-0.5;r=q*q;return(((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);}
+  else{q=Math.sqrt(-2*Math.log(1-p));return-(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+}
+
+// ============================================================
+// MAIN CALCULATION (prenatal: uses model-estimated length)
+// ============================================================
+function computePercentile(egDecimal, efw, sexo, tallaM, pesoPreg, paridad, edad) {
+  const pesoCorr = corregirPeso(pesoPreg, tallaM);
+  const p40 = peso40(pesoCorr, tallaM, sexo, paridad);
+  const t40 = talla40(pesoCorr, tallaM, sexo, edad);
+
+  // Expected weight & length at actual GA
+  const pesoEst = p40 * gardosiProp(egDecimal) / gardosiProp(40);
+  const tallaEst = t40 * lengthProp(egDecimal, sexo) / lengthProp(40, sexo);
+
+  // Expected BMI (both weight and length from model)
+  const imcEst = (pesoEst / 1000) / Math.pow(tallaEst / 100, 2);
+  // Observed BMI (EFW from ultrasound, length from model)
+  const imcObs = (efw / 1000) / Math.pow(tallaEst / 100, 2);
+
+  const z = (imcObs / imcEst - 1) / CV_IMC;
+  const percentil = normCdf(z) * 100;
+
+  return { pesoCorr, pesoEst, tallaEst, imcEst, imcObs, z, percentil };
+}
+
+function expectedBMI_atGA(ga, pesoCorr, tallaM, sexo, paridad, edad) {
+  const p40v = peso40(pesoCorr, tallaM, sexo, paridad);
+  const t40v = talla40(pesoCorr, tallaM, sexo, edad);
+  const pe = p40v * gardosiProp(ga) / gardosiProp(40);
+  const te = t40v * lengthProp(ga, sexo) / lengthProp(40, sexo);
+  return (pe / 1000) / Math.pow(te / 100, 2);
+}
+
+// ============================================================
+// UI STATE
+// ============================================================
+let chartInstance = null;
+let lastResult = null;
+let lastInputs = null;
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg; el.classList.add('show');
+}
+function clearError() { document.getElementById('errorMsg').classList.remove('show'); }
+
+function calcular() {
+  clearError();
+
+  const weeks = parseInt(document.getElementById('eg_weeks').value);
+  const days = parseInt(document.getElementById('eg_days').value) || 0;
+  const efw = parseFloat(document.getElementById('efw').value);
+  const sexoVal = document.getElementById('sexo').value;
+  const tallaM = parseFloat(document.getElementById('talla_m').value);
+  const pesoPreg = parseFloat(document.getElementById('peso_preg').value);
+  const paridadVal = document.getElementById('paridad').value;
+  const edad = parseFloat(document.getElementById('edad').value);
+
+  if (isNaN(weeks) || isNaN(efw) || sexoVal==='' || isNaN(tallaM) || isNaN(pesoPreg) || paridadVal==='' || isNaN(edad)) {
+    showError(t('errFill')); return;
+  }
+  const egDecimal = weeks + days / 7;
+  if (egDecimal < 28 || egDecimal > 42 + 6/7) { showError(t('errGA')); return; }
+  if (efw < 500 || efw > 6000) { showError(t('errEFW')); return; }
+  if (tallaM < 130 || tallaM > 200) { showError(t('errHeight')); return; }
+  if (pesoPreg < 35 || pesoPreg > 200) { showError(t('errWeight')); return; }
+
+  const sexo = parseInt(sexoVal);
+  const paridad = parseInt(paridadVal);
+
+  const r = computePercentile(egDecimal, efw, sexo, tallaM, pesoPreg, paridad, edad);
+  lastResult = r;
+  lastInputs = { weeks, days, egDecimal, efw, sexo, tallaM, pesoPreg, paridad, edad };
+
+  // Display
+  const panel = document.getElementById('resultPanel');
+  panel.classList.add('show');
+  panel.className = 'result-panel show ' + classKey(r.percentil);
+
+  document.getElementById('percentileValue').textContent = 'P ' + r.percentil.toFixed(1);
+  document.getElementById('imcObs').textContent = r.imcObs.toFixed(2);
+  document.getElementById('imcEsperado').textContent = r.imcEst.toFixed(2);
+  document.getElementById('zScore').textContent = (r.z >= 0 ? '+' : '') + r.z.toFixed(3);
+  updateClassificationText(r.percentil);
+
+  drawChart();
+}
+
+function redrawChart() { if (lastResult && lastInputs) drawChart(); }
+
+// Custom plugin to draw percentile label next to the case point
+const percentileLabelPlugin = {
+  id: 'percentileLabel',
+  afterDatasetsDraw(chart) {
+    if (!lastResult) return;
+    const dataset = chart.data.datasets[5]; // case dataset
+    if (!dataset) return;
+    const meta = chart.getDatasetMeta(5);
+    if (!meta || !meta.data) return;
+    // Find the single non-null point
+    for (let i = 0; i < dataset.data.length; i++) {
+      if (dataset.data[i] !== null && dataset.data[i] !== undefined) {
+        const pt = meta.data[i];
+        if (!pt) continue;
+        const ctx = chart.ctx;
+        const label = 'P ' + lastResult.percentil.toFixed(1);
+        ctx.save();
+        ctx.font = 'bold 12px "Segoe UI", system-ui, sans-serif';
+        ctx.fillStyle = '#C62828';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, pt.x + 12, pt.y - 1);
+        ctx.restore();
+        break; // only one point
+      }
+    }
+  }
+};
+
+function drawChart() {
+  const r = lastResult, inp = lastInputs;
+  const card = document.getElementById('chartCard');
+  card.classList.add('show');
+
+  const z10 = normInv(0.10), z90 = normInv(0.90);
+  const z3 = normInv(0.03), z97 = normInv(0.97);
+
+  const gaValues = [];
+  for (let ga = 28; ga <= 42; ga += 0.5) gaValues.push(ga);
+
+  const p3=[], p10=[], p50=[], p90=[], p97=[];
+  gaValues.forEach(ga => {
+    const exp = expectedBMI_atGA(ga, r.pesoCorr, inp.tallaM, inp.sexo, inp.paridad, inp.edad);
+    p3.push(exp * (1 + z3 * CV_IMC));
+    p10.push(exp * (1 + z10 * CV_IMC));
+    p50.push(exp);
+    p90.push(exp * (1 + z90 * CV_IMC));
+    p97.push(exp * (1 + z97 * CV_IMC));
+  });
+
+  // Place case marker at closest GA
+  let closestIdx=0, minDiff=Infinity;
+  gaValues.forEach((ga,i) => { if(Math.abs(ga-inp.egDecimal)<minDiff){minDiff=Math.abs(ga-inp.egDecimal);closestIdx=i;} });
+  const caseData = new Array(gaValues.length).fill(null);
+  caseData[closestIdx] = r.imcObs;
+
+  if (chartInstance) chartInstance.destroy();
+
+  const ctx = document.getElementById('chart').getContext('2d');
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: gaValues,
+      datasets: [
+        { label:'p3', data:p3, borderColor:'rgba(198,40,40,0.3)', borderWidth:1, borderDash:[4,4], pointRadius:0, fill:false, tension:0.4 },
+        { label:'p10', data:p10, borderColor:'#E65100', borderWidth:2, pointRadius:0, fill:false, tension:0.4 },
+        { label:'p50', data:p50, borderColor:'#2E7D32', borderWidth:2.5, pointRadius:0, fill:false, tension:0.4 },
+        { label:'p90', data:p90, borderColor:'#1565C0', borderWidth:2, pointRadius:0, fill:false, tension:0.4 },
+        { label:'p97', data:p97, borderColor:'rgba(21,101,192,0.3)', borderWidth:1, borderDash:[4,4], pointRadius:0, fill:false, tension:0.4 },
+        {
+          label: t('caseLabel'),
+          data: caseData,
+          borderColor: '#C62828',
+          backgroundColor: '#C62828',
+          pointRadius: 7,
+          pointHoverRadius: 9,
+          pointStyle: 'circle',
+          pointBorderWidth: 0,
+          showLine: false,
+          fill: false
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      resizeDelay: 100,
+      animation: { duration: 400 },
+      interaction: { mode:'index', intersect:false },
+      plugins: {
+        legend: {
+          position:'bottom',
+          labels: { usePointStyle:true, padding:14, font:{size:11},
+            filter: item => item.text!=='p3' && item.text!=='p97' }
+        },
+        tooltip: {
+          callbacks: {
+            title: items => t('tooltipWeek') + ' ' + items[0].label,
+            label: ctx => ctx.raw===null ? null : ctx.dataset.label+': '+ctx.raw.toFixed(2)+' kg/m\u00B2'
+          }
+        }
+      },
+      scales: {
+        x: {
+          title:{display:true, text:t('xAxis'), font:{size:12}},
+          ticks:{ callback: v => Number.isInteger(gaValues[v]) ? gaValues[v] : '', maxRotation:0 },
+          grid:{color:'rgba(0,0,0,0.05)'}
+        },
+        y: {
+          title:{display:true, text:t('yAxis'), font:{size:12}},
+          grid:{color:'rgba(0,0,0,0.05)'}
+        }
+      }
+    },
+    plugins: [percentileLabelPlugin]
+  });
+}
+
+// ============================================================
+// PDF EXPORT
+// ============================================================
+async function exportPDF() {
+  if (!lastResult || !lastInputs) return;
+  const r = lastResult, inp = lastInputs;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const W = 210, margin = 20, cw = W - 2*margin;
+  let y = margin;
+
+  // Title
+  doc.setFillColor(21, 101, 192);
+  doc.rect(0, 0, W, 36, 'F');
+  doc.setTextColor(255);
+  doc.setFontSize(16);
+  doc.setFont('helvetica','bold');
+  doc.text(t('pdfTitle'), W/2, 16, { align:'center' });
+  doc.setFontSize(9);
+  doc.setFont('helvetica','normal');
+  doc.text(new Date().toLocaleDateString(lang==='es'?'es-ES':'en-US',{year:'numeric',month:'long',day:'numeric'}), W/2, 26, { align:'center' });
+  y = 44;
+
+  doc.setTextColor(33);
+
+  // Patient data
+  doc.setFontSize(12);
+  doc.setFont('helvetica','bold');
+  doc.text(lang==='es' ? 'Datos del caso' : 'Case data', margin, y); y += 8;
+  doc.setFontSize(10);
+  doc.setFont('helvetica','normal');
+
+  const sexLabel = inp.sexo===1 ? t('pdfMale') : t('pdfFemale');
+  const parLabel = inp.paridad===0 ? t('pdfNulli') : t('pdfMulti');
+  const gaStr = inp.weeks + '+' + inp.days;
+
+  const rows = [
+    [t('pdfGA'), gaStr + ' (' + inp.egDecimal.toFixed(2) + ' ' + (lang==='es'?'sem.':'wk.') + ')'],
+    [t('pdfEFW'), inp.efw + ' g'],
+    [t('pdfSex'), sexLabel],
+    [t('pdfMaternalHeight'), inp.tallaM + ' cm'],
+    [t('pdfMaternalWeight'), inp.pesoPreg + ' kg'],
+    [t('pdfParity'), parLabel],
+    [t('pdfAge'), inp.edad + ' ' + t('unit_age').toLowerCase()],
+  ];
+
+  rows.forEach(([lbl, val]) => {
+    doc.setFont('helvetica','bold');
+    doc.text(lbl + ':', margin, y);
+    doc.setFont('helvetica','normal');
+    doc.text(val, margin + 70, y);
+    y += 6;
+  });
+  y += 6;
+
+  // Results
+  doc.setFontSize(12);
+  doc.setFont('helvetica','bold');
+  doc.text(lang==='es' ? 'Resultado' : 'Result', margin, y); y += 8;
+
+  // Percentile box
+  const ck = classKey(r.percentil);
+  const boxColor = ck==='iugr' ? [255,235,238] : ck==='peg' ? [255,243,224] : ck==='geg' ? [227,242,253] : [232,245,233];
+  const txtColor = ck==='iugr' ? [198,40,40] : ck==='peg' ? [230,81,0] : ck==='geg' ? [21,101,192] : [46,125,50];
+  doc.setFillColor(...boxColor);
+  doc.roundedRect(margin, y, cw, 24, 3, 3, 'F');
+  doc.setFontSize(22);
+  doc.setFont('helvetica','bold');
+  doc.setTextColor(...txtColor);
+  doc.text('P ' + r.percentil.toFixed(1), W/2, y + 10, { align:'center' });
+  doc.setFontSize(10);
+  doc.setFont('helvetica','normal');
+  const cls = t(classKey(r.percentil));
+  doc.text(cls, W/2, y + 18, { align:'center' });
+  y += 32;
+
+  doc.setTextColor(33);
+  doc.setFontSize(10);
+  const resRows = [
+    [t('pdfObsBMI'), r.imcObs.toFixed(2) + ' kg/m\u00B2'],
+    [t('pdfExpBMI'), r.imcEst.toFixed(2) + ' kg/m\u00B2'],
+    [t('pdfZscore'), (r.z>=0?'+':'') + r.z.toFixed(3)],
+  ];
+  resRows.forEach(([lbl, val]) => {
+    doc.setFont('helvetica','bold');
+    doc.text(lbl + ':', margin, y);
+    doc.setFont('helvetica','normal');
+    doc.text(val, margin + 70, y);
+    y += 6;
+  });
+  y += 6;
+
+  // Chart image
+  const canvas = document.getElementById('chart');
+  if (canvas) {
+    const imgData = canvas.toDataURL('image/png', 1.0);
+    const imgW = cw;
+    const imgH = imgW / 1.6;
+    if (y + imgH > 280) { doc.addPage(); y = margin; }
+    doc.addImage(imgData, 'PNG', margin, y, imgW, imgH);
+    y += imgH + 6;
+  }
+
+  // Reference
+  if (y > 260) { doc.addPage(); y = margin; }
+  doc.setFontSize(7);
+  doc.setTextColor(144);
+  doc.text('Fern\u00E1ndez Alba JJ, Castillo Lara M, Jim\u00E9nez Heras JM, Santotoribio JD, Fuentes Morales R, Rosa Rubio FJ, Gonz\u00E1lez Mac\u00EDas C.', margin, y); y += 3.5;
+  doc.text('Customized Fetal Body Mass Index as a Better Predictive Marker for Neonatal Nutritional Status.', margin, y); y += 3.5;
+  doc.text('Diagnostics (Basel). 2025;15(7):877. doi:10.3390/diagnostics15070877. PMID: 40218226; PMCID: PMC11988378.', margin, y);
+
+  doc.save('fetal_bmi_report.pdf');
+}
+
+// Enter key
+document.addEventListener('keydown', e => { if (e.key === 'Enter') calcular(); });
+</script>
+</body>
+</html>

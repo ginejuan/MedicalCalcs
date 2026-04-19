@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INTERGROWTH-21st Weight Percentile Calculator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --primary: #00695C;
+    --primary-light: #E0F2F1;
+    --accent: #C62828;
+    --green: #2E7D32;
+    --gray: #546E7A;
+    --bg: #FAFAFA;
+    --card: #FFFFFF;
+    --border: #E0E0E0;
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: #263238;
+    line-height: 1.5;
+  }
+
+  header {
+    text-align: center;
+    padding: 22px 16px 14px;
+    background: linear-gradient(135deg, var(--primary), #004D40);
+    color: white;
+  }
+  header h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 4px; }
+  header p.subtitle { font-size: 0.85rem; opacity: 0.8; }
+  .header-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    font-size: 0.65rem;
+    opacity: 0.6;
+    line-height: 1.4;
+  }
+  .header-meta a { color: white; text-decoration: none; }
+  .header-meta a:hover { text-decoration: underline; opacity: 1; }
+  .header-ref { text-align: left; max-width: 70%; }
+  .header-copy { text-align: right; white-space: nowrap; }
+  .lang-toggle {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+  }
+  .lang-toggle:hover { background: rgba(255,255,255,0.25); }
+  .header-wrap { position: relative; }
+
+  .main-layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 16px;
+    align-items: start;
+  }
+  @media (max-width: 860px) {
+    .main-layout { grid-template-columns: 1fr; }
+  }
+
+  .left-col { display: flex; flex-direction: column; gap: 16px; }
+
+  .card {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .card h2 {
+    font-size: 1rem;
+    color: var(--primary);
+    margin-bottom: 14px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--primary-light);
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .form-group { display: flex; flex-direction: column; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-group label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--gray);
+    margin-bottom: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .form-group input, .form-group select {
+    padding: 9px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+    background: #FAFAFA;
+  }
+  .form-group input:focus, .form-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(0,105,92,0.1);
+  }
+  .form-group .unit { font-size: 0.72rem; color: #90A4AE; margin-top: 2px; }
+
+  .ga-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 8px;
+    align-items: start;
+  }
+  .ga-row > div { display: flex; flex-direction: column; }
+  .ga-row .ga-plus {
+    font-size: 1.2rem;
+    color: var(--gray);
+    padding-top: 8px;
+    text-align: center;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 11px 24px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    width: 100%;
+  }
+  .btn:hover { background: #004D40; }
+  .btn:active { transform: scale(0.98); }
+
+  .btn-secondary {
+    background: #546E7A;
+    font-size: 0.85rem;
+    padding: 9px 18px;
+    margin-top: 8px;
+  }
+  .btn-secondary:hover { background: #37474F; }
+
+  .error-msg {
+    color: var(--accent);
+    font-size: 0.83rem;
+    margin-top: 6px;
+    display: none;
+  }
+  .error-msg.show { display: block; }
+
+  .result-panel {
+    display: none;
+    padding: 18px;
+    border-radius: 10px;
+    text-align: center;
+  }
+  .result-panel.show { display: block; }
+  .result-panel .percentile-value {
+    font-size: 2.6rem;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  .result-panel .percentile-label {
+    font-size: 0.88rem;
+    margin-top: 3px;
+    opacity: 0.85;
+  }
+  .result-panel .classification {
+    display: inline-block;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-top: 8px;
+  }
+  .result-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+    text-align: center;
+  }
+  .detail-box {
+    background: rgba(255,255,255,0.6);
+    border-radius: 7px;
+    padding: 10px 6px;
+  }
+  .detail-box .val { font-size: 1.15rem; font-weight: 700; color: #263238; }
+  .detail-box .lbl { font-size: 0.7rem; color: var(--gray); text-transform: uppercase; }
+
+  .iugr { background: #FFEBEE; color: #B71C1C; }
+  .iugr .percentile-value { color: #C62828; }
+  .iugr .classification { background: #C62828; color: white; }
+  .peg { background: #FFF3E0; color: #E65100; }
+  .peg .percentile-value { color: #E65100; }
+  .peg .classification { background: #E65100; color: white; }
+  .aeg { background: #E0F2F1; color: #004D40; }
+  .aeg .percentile-value { color: #00695C; }
+  .aeg .classification { background: #00695C; color: white; }
+  .geg { background: #E3F2FD; color: #0D47A1; }
+  .geg .percentile-value { color: #1565C0; }
+  .geg .classification { background: #1565C0; color: white; }
+
+  .right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .chart-wrapper {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    display: none;
+  }
+  .chart-wrapper.show { display: block; }
+  .chart-wrapper h2 {
+    font-size: 1rem;
+    color: var(--primary);
+    margin-bottom: 12px;
+  }
+  .chart-container { position: relative; width: 100%; height: 400px; }
+
+  .disclaimer {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px 20px;
+    font-size: 0.8rem;
+    color: #546E7A;
+    line-height: 1.5;
+    font-style: italic;
+  }
+  .disclaimer strong { font-style: italic; color: #263238; }
+</style>
+</head>
+<body>
+<div class="header-wrap">
+  <header>
+    <h1 id="title">INTERGROWTH-21st Weight Percentile Calculator</h1>
+    <p class="subtitle" id="subtitle">International newborn size standards</p>
+    <button class="lang-toggle" id="langBtn" onclick="toggleLang()">ES</button>
+    <div class="header-meta">
+      <div class="header-ref">Villar J, Cheikh Ismail L, Victora CG, et al. <em>Lancet.</em> 2014;384(9946):857&ndash;68. <a href="https://doi.org/10.1016/S0140-6736(14)60932-6" target="_blank">doi:10.1016/S0140-6736(14)60932-6</a></div>
+      <div class="header-copy">&copy; 2026 Juan Jes&uacute;s Fern&aacute;ndez Alba</div>
+    </div>
+  </header>
+</div>
+
+<div class="main-layout">
+  <div class="left-col">
+    <div class="card">
+      <h2 id="h_data">Neonatal / Fetal data</h2>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label id="lbl_ga" for="eg_weeks">Gestational age</label>
+          <div class="ga-row">
+            <div>
+              <input type="number" id="eg_weeks" min="33" max="42" step="1" placeholder="40">
+              <span class="unit" id="unit_weeks">Weeks (33–42)</span>
+            </div>
+            <div class="ga-plus">+</div>
+            <div>
+              <input type="number" id="eg_days" min="0" max="6" step="1" placeholder="0">
+              <span class="unit" id="unit_days">Days (0–6)</span>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label id="lbl_weight" for="peso">Weight</label>
+          <input type="number" id="peso" min="500" max="6000" step="1" placeholder="3200">
+          <span class="unit" id="unit_wt">Grams</span>
+        </div>
+        <div class="form-group">
+          <label id="lbl_sex" for="sexo">Sex</label>
+          <select id="sexo">
+            <option value="" disabled selected id="opt_select">Select...</option>
+            <option value="M" id="opt_male">Male</option>
+            <option value="F" id="opt_female">Female</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn" id="btnCalc" onclick="calcular()">Calculate percentile</button>
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div class="card" style="font-size:0.82rem; color:#546E7A; line-height:1.5;">
+      <p id="info_text">Population-based standard. No maternal adjustment. Reference range: 33+0 to 42+6 weeks.</p>
+    </div>
+  </div>
+
+  <div class="right-col">
+    <div class="result-panel" id="resultPanel">
+      <div class="percentile-value" id="percentileValue"></div>
+      <div class="percentile-label" id="percentileLabel">INTERGROWTH-21st weight percentile</div>
+      <div class="classification" id="classification"></div>
+      <div class="result-details">
+        <div class="detail-box">
+          <div class="val" id="pesoObs">—</div>
+          <div class="lbl" id="lbl_wt_obs">Weight</div>
+        </div>
+        <div class="detail-box">
+          <div class="val" id="pesoP50">—</div>
+          <div class="lbl" id="lbl_wt_p50">P50 reference</div>
+        </div>
+        <div class="detail-box">
+          <div class="val" id="ratioP50">—</div>
+          <div class="lbl" id="lbl_ratio">Weight / P50</div>
+        </div>
+      </div>
+      <button class="btn btn-secondary" id="btnPdf" onclick="exportPDF()" style="margin-top:12px">
+        <span id="btnPdfText">Export to PDF</span>
+      </button>
+    </div>
+
+    <div class="chart-wrapper" id="chartCard">
+      <h2 id="h_chart">INTERGROWTH-21st percentile curves</h2>
+      <div class="chart-container">
+        <canvas id="chart" height="400"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="disclaimer" id="disclaimer">
+  <strong id="disc_title">Terms of use:</strong>
+  <span id="disc_text">This calculator is designed for exclusive use by healthcare professionals. If this is not your case, please do not use it. The information provided must always be interpreted by a professional and should not replace medical consultation or any diagnostic or therapeutic procedure. The authors are not responsible for inappropriate use of this calculator.</span>
+</div>
+
+<script>
+// ============================================================
+// I18N
+// ============================================================
+let lang = 'en';
+const T = {
+  en: {
+    title: 'INTERGROWTH-21st Weight Percentile Calculator',
+    subtitle: 'International newborn size standards',
+    h_data: 'Neonatal / Fetal data',
+    lbl_ga: 'Gestational age',
+    unit_weeks: 'Weeks (33\u201342)',
+    unit_days: 'Days (0\u20136)',
+    lbl_weight: 'Weight',
+    unit_wt: 'Grams',
+    lbl_sex: 'Sex',
+    opt_select: 'Select...',
+    opt_male: 'Male',
+    opt_female: 'Female',
+    btnCalc: 'Calculate percentile',
+    percentileLabel: 'INTERGROWTH-21st weight percentile',
+    lbl_wt_obs: 'Weight',
+    lbl_wt_p50: 'P50 reference',
+    lbl_ratio: 'Weight / P50',
+    h_chart: 'INTERGROWTH-21st percentile curves',
+    btnPdfText: 'Export to PDF',
+    iugr: 'IUGR \u2014 Intrauterine growth restriction',
+    peg: 'SGA \u2014 Small for gestational age',
+    aeg: 'AGA \u2014 Appropriate for gestational age',
+    geg: 'LGA \u2014 Large for gestational age',
+    xAxis: 'Gestational age (weeks)',
+    yAxis: 'Weight (g)',
+    tooltipWeek: 'Week',
+    caseLabel: 'Current case',
+    errFill: 'Please complete all fields.',
+    errGA: 'Gestational age must be between 33+0 and 42+6.',
+    errWt: 'Weight must be between 500 and 6000 g.',
+    langBtn: 'ES',
+    pdfTitle: 'INTERGROWTH-21st Weight Report',
+    pdfGA: 'Gestational age',
+    pdfWeight: 'Weight',
+    pdfSex: 'Sex',
+    pdfPercentile: 'Percentile',
+    pdfClassification: 'Classification',
+    pdfP50: 'P50 reference',
+    pdfRatio: 'Weight / P50',
+    pdfMale: 'Male', pdfFemale: 'Female',
+    info_text: 'Population-based standard. No maternal adjustment. Reference range: 33+0 to 42+6 weeks.',
+    disc_title: 'Terms of use:',
+    disc_text: 'This calculator is designed for exclusive use by healthcare professionals. If this is not your case, please do not use it. The information provided must always be interpreted by a professional and should not replace medical consultation or any diagnostic or therapeutic procedure. The authors are not responsible for inappropriate use of this calculator.',
+  },
+  es: {
+    title: 'Calculadora de Percentil de Peso INTERGROWTH-21st',
+    subtitle: 'Est\u00E1ndares internacionales de tama\u00F1o neonatal',
+    h_data: 'Datos neonatales / fetales',
+    lbl_ga: 'Edad gestacional',
+    unit_weeks: 'Semanas (33\u201342)',
+    unit_days: 'D\u00EDas (0\u20136)',
+    lbl_weight: 'Peso',
+    unit_wt: 'Gramos',
+    lbl_sex: 'Sexo',
+    opt_select: 'Seleccionar...',
+    opt_male: 'Var\u00F3n',
+    opt_female: 'Mujer',
+    btnCalc: 'Calcular percentil',
+    percentileLabel: 'Percentil de peso INTERGROWTH-21st',
+    lbl_wt_obs: 'Peso',
+    lbl_wt_p50: 'P50 referencia',
+    lbl_ratio: 'Peso / P50',
+    h_chart: 'Curvas de percentiles INTERGROWTH-21st',
+    btnPdfText: 'Exportar a PDF',
+    iugr: 'CIR \u2014 Crecimiento intrauterino restringido',
+    peg: 'PEG \u2014 Peque\u00F1o para la edad gestacional',
+    aeg: 'AEG \u2014 Adecuado para la edad gestacional',
+    geg: 'GEG \u2014 Grande para la edad gestacional',
+    xAxis: 'Edad gestacional (semanas)',
+    yAxis: 'Peso (g)',
+    tooltipWeek: 'Semana',
+    caseLabel: 'Caso actual',
+    errFill: 'Por favor, complete todos los campos.',
+    errGA: 'La edad gestacional debe estar entre 33+0 y 42+6.',
+    errWt: 'El peso debe estar entre 500 y 6000 g.',
+    langBtn: 'EN',
+    pdfTitle: 'Informe de Peso INTERGROWTH-21st',
+    pdfGA: 'Edad gestacional',
+    pdfWeight: 'Peso',
+    pdfSex: 'Sexo',
+    pdfPercentile: 'Percentil',
+    pdfClassification: 'Clasificaci\u00F3n',
+    pdfP50: 'P50 referencia',
+    pdfRatio: 'Peso / P50',
+    pdfMale: 'Var\u00F3n', pdfFemale: 'Mujer',
+    info_text: 'Est\u00E1ndar poblacional. Sin ajuste materno. Rango de referencia: 33+0 a 42+6 semanas.',
+    disc_title: 'Condiciones de uso:',
+    disc_text: 'Esta calculadora se ha dise\u00F1ado para uso exclusivo por profesionales de la salud. Si este no es su caso, por favor, no la use. La informaci\u00F3n ofrecida debe ser siempre interpretada por un profesional y no debe reemplazar la consulta m\u00E9dica o cualquier diagn\u00F3stico o procedimiento terap\u00E9utico. Los autores no se hacen responsables del uso inapropiado de esta calculadora.',
+  }
+};
+
+function t(key) { return T[lang][key] || T['en'][key] || key; }
+
+function toggleLang() {
+  lang = lang === 'en' ? 'es' : 'en';
+  applyLang();
+  if (lastResult) redrawChart();
+}
+
+function applyLang() {
+  const ids = ['title','subtitle','h_data','lbl_ga','unit_weeks','unit_days','lbl_weight','unit_wt',
+    'lbl_sex','opt_select','opt_male','opt_female','btnCalc',
+    'percentileLabel','lbl_wt_obs','lbl_wt_p50','lbl_ratio','h_chart','btnPdfText','langBtn',
+    'disc_title','disc_text','info_text'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = t(id);
+  });
+  document.documentElement.lang = lang === 'es' ? 'es' : 'en';
+  if (lastResult) updateClassificationText(lastResult.percentil);
+}
+
+function classKey(pct) {
+  if (pct < 3) return 'iugr';
+  if (pct < 10) return 'peg';
+  if (pct > 90) return 'geg';
+  return 'aeg';
+}
+
+function updateClassificationText(pct) {
+  document.getElementById('classification').textContent = t(classKey(pct));
+}
+
+// ============================================================
+// INTERGROWTH-21st REFERENCE TABLES
+// Villar et al. Lancet 2014;384:857-68
+// Key: "weeks.days" → [P3, P5, P10, P50, P90, P95, P97] in kg
+// ============================================================
+const IG = {
+  M: {
+    "33.0":[1.18,1.28,1.43,1.95,2.52,2.70,2.82],"33.1":[1.22,1.32,1.47,1.99,2.56,2.74,2.86],
+    "33.2":[1.26,1.36,1.51,2.03,2.60,2.77,2.90],"33.3":[1.30,1.40,1.55,2.07,2.64,2.81,2.93],
+    "33.4":[1.34,1.44,1.59,2.11,2.67,2.85,2.97],"33.5":[1.38,1.48,1.63,2.15,2.71,2.89,3.01],
+    "33.6":[1.42,1.52,1.67,2.18,2.75,2.93,3.05],
+    "34.0":[1.45,1.55,1.71,2.22,2.79,2.96,3.08],"34.1":[1.49,1.59,1.74,2.26,2.82,3.00,3.12],
+    "34.2":[1.53,1.63,1.78,2.29,2.86,3.03,3.15],"34.3":[1.56,1.66,1.82,2.33,2.89,3.07,3.19],
+    "34.4":[1.60,1.70,1.85,2.36,2.93,3.10,3.22],"34.5":[1.63,1.73,1.89,2.40,2.96,3.14,3.26],
+    "34.6":[1.67,1.77,1.92,2.43,3.00,3.17,3.29],
+    "35.0":[1.70,1.80,1.95,2.47,3.03,3.20,3.32],"35.1":[1.74,1.84,1.99,2.50,3.06,3.24,3.36],
+    "35.2":[1.77,1.87,2.02,2.53,3.09,3.27,3.39],"35.3":[1.80,1.90,2.05,2.56,3.13,3.30,3.42],
+    "35.4":[1.83,1.94,2.09,2.60,3.16,3.33,3.45],"35.5":[1.87,1.97,2.12,2.63,3.19,3.36,3.48],
+    "35.6":[1.90,2.00,2.15,2.66,3.22,3.39,3.51],
+    "36.0":[1.93,2.03,2.18,2.69,3.25,3.42,3.54],"36.1":[1.96,2.06,2.21,2.72,3.28,3.45,3.57],
+    "36.2":[1.99,2.09,2.24,2.75,3.31,3.48,3.60],"36.3":[2.02,2.12,2.27,2.78,3.34,3.51,3.63],
+    "36.4":[2.05,2.15,2.30,2.81,3.37,3.54,3.66],"36.5":[2.08,2.18,2.33,2.84,3.39,3.57,3.69],
+    "36.6":[2.11,2.21,2.36,2.86,3.42,3.60,3.72],
+    "37.0":[2.13,2.24,2.38,2.89,3.45,3.62,3.74],"37.1":[2.16,2.26,2.41,2.92,3.48,3.65,3.77],
+    "37.2":[2.19,2.29,2.44,2.95,3.50,3.68,3.80],"37.3":[2.22,2.32,2.47,2.97,3.53,3.70,3.82],
+    "37.4":[2.24,2.34,2.49,3.00,3.55,3.73,3.85],"37.5":[2.27,2.37,2.52,3.02,3.58,3.75,3.87],
+    "37.6":[2.29,2.39,2.54,3.05,3.61,3.78,3.90],
+    "38.0":[2.32,2.42,2.57,3.07,3.63,3.80,3.92],"38.1":[2.34,2.44,2.59,3.10,3.65,3.83,3.95],
+    "38.2":[2.37,2.47,2.62,3.12,3.68,3.85,3.97],"38.3":[2.39,2.49,2.64,3.15,3.70,3.87,3.99],
+    "38.4":[2.42,2.52,2.67,3.17,3.72,3.90,4.02],"38.5":[2.44,2.54,2.69,3.19,3.75,3.92,4.04],
+    "38.6":[2.46,2.56,2.71,3.22,3.77,3.94,4.06],
+    "39.0":[2.49,2.59,2.73,3.24,3.79,3.96,4.08],"39.1":[2.51,2.61,2.76,3.26,3.81,3.99,4.10],
+    "39.2":[2.53,2.63,2.78,3.28,3.83,4.01,4.12],"39.3":[2.55,2.65,2.80,3.30,3.86,4.03,4.15],
+    "39.4":[2.57,2.67,2.82,3.32,3.88,4.05,4.17],"39.5":[2.59,2.69,2.84,3.34,3.90,4.07,4.19],
+    "39.6":[2.61,2.71,2.86,3.36,3.92,4.09,4.21],
+    "40.0":[2.63,2.73,2.88,3.38,3.94,4.11,4.22],"40.1":[2.65,2.75,2.90,3.40,3.95,4.13,4.24],
+    "40.2":[2.67,2.77,2.92,3.42,3.97,4.15,4.26],"40.3":[2.69,2.79,2.94,3.44,3.99,4.16,4.28],
+    "40.4":[2.71,2.81,2.96,3.46,4.01,4.18,4.30],"40.5":[2.73,2.83,2.98,3.48,4.03,4.20,4.32],
+    "40.6":[2.75,2.85,2.99,3.49,4.04,4.22,4.33],
+    "41.0":[2.76,2.86,3.01,3.51,4.06,4.23,4.35],"41.1":[2.78,2.88,3.03,3.53,4.08,4.25,4.37],
+    "41.2":[2.80,2.90,3.05,3.55,4.09,4.27,4.38],"41.3":[2.82,2.91,3.06,3.56,4.11,4.28,4.40],
+    "41.4":[2.83,2.93,3.08,3.58,4.13,4.30,4.42],"41.5":[2.85,2.95,3.09,3.59,4.14,4.31,4.43],
+    "41.6":[2.86,2.96,3.11,3.61,4.16,4.33,4.45],
+    "42.0":[2.88,2.98,3.12,3.62,4.17,4.34,4.46],"42.1":[2.89,2.99,3.14,3.64,4.19,4.36,4.47],
+    "42.2":[2.91,3.01,3.15,3.65,4.20,4.37,4.49],"42.3":[2.92,3.02,3.17,3.67,4.21,4.39,4.50],
+    "42.4":[2.94,3.04,3.18,3.68,4.23,4.40,4.52],"42.5":[2.95,3.05,3.20,3.69,4.24,4.41,4.53],
+    "42.6":[2.96,3.06,3.21,3.71,4.25,4.43,4.54]
+  },
+  F: {
+    "33.0":[1.20,1.29,1.41,1.86,2.35,2.51,2.61],"33.1":[1.24,1.33,1.45,1.90,2.40,2.55,2.66],
+    "33.2":[1.28,1.37,1.49,1.94,2.44,2.59,2.70],"33.3":[1.32,1.40,1.53,1.98,2.48,2.63,2.74],
+    "33.4":[1.36,1.44,1.57,2.02,2.52,2.67,2.78],"33.5":[1.39,1.48,1.61,2.06,2.56,2.72,2.82],
+    "33.6":[1.43,1.52,1.65,2.09,2.60,2.75,2.86],
+    "34.0":[1.47,1.55,1.68,2.13,2.64,2.79,2.90],"34.1":[1.50,1.59,1.72,2.17,2.67,2.83,2.94],
+    "34.2":[1.54,1.62,1.75,2.20,2.71,2.87,2.98],"34.3":[1.57,1.66,1.79,2.24,2.75,2.91,3.01],
+    "34.4":[1.61,1.69,1.82,2.28,2.79,2.94,3.05],"34.5":[1.64,1.73,1.86,2.31,2.82,2.98,3.09],
+    "34.6":[1.67,1.76,1.89,2.35,2.86,3.02,3.12],
+    "35.0":[1.71,1.79,1.92,2.38,2.89,3.05,3.16],"35.1":[1.74,1.83,1.96,2.41,2.93,3.09,3.19],
+    "35.2":[1.77,1.86,1.99,2.45,2.96,3.12,3.23],"35.3":[1.80,1.89,2.02,2.48,2.99,3.15,3.26],
+    "35.4":[1.83,1.92,2.05,2.51,3.03,3.19,3.30],"35.5":[1.86,1.95,2.08,2.54,3.06,3.22,3.33],
+    "35.6":[1.89,1.98,2.11,2.57,3.09,3.25,3.36],
+    "36.0":[1.92,2.01,2.14,2.60,3.12,3.28,3.39],"36.1":[1.95,2.04,2.17,2.63,3.15,3.31,3.42],
+    "36.2":[1.98,2.07,2.20,2.66,3.18,3.34,3.45],"36.3":[2.00,2.09,2.23,2.69,3.21,3.37,3.48],
+    "36.4":[2.03,2.12,2.25,2.72,3.24,3.40,3.51],"36.5":[2.06,2.15,2.28,2.75,3.27,3.43,3.54],
+    "36.6":[2.08,2.17,2.31,2.77,3.30,3.46,3.57],
+    "37.0":[2.11,2.20,2.33,2.80,3.32,3.49,3.60],"37.1":[2.14,2.23,2.36,2.83,3.35,3.52,3.63],
+    "37.2":[2.16,2.25,2.38,2.85,3.38,3.54,3.65],"37.3":[2.18,2.27,2.41,2.88,3.40,3.57,3.68],
+    "37.4":[2.21,2.30,2.43,2.90,3.43,3.60,3.71],"37.5":[2.23,2.32,2.46,2.93,3.46,3.62,3.73],
+    "37.6":[2.25,2.35,2.48,2.95,3.48,3.65,3.76],
+    "38.0":[2.28,2.37,2.50,2.97,3.51,3.67,3.78],"38.1":[2.30,2.39,2.53,3.00,3.53,3.69,3.81],
+    "38.2":[2.32,2.41,2.55,3.02,3.55,3.72,3.83],"38.3":[2.34,2.43,2.57,3.04,3.58,3.74,3.85],
+    "38.4":[2.36,2.45,2.59,3.06,3.60,3.76,3.88],"38.5":[2.38,2.47,2.61,3.09,3.62,3.79,3.90],
+    "38.6":[2.40,2.50,2.63,3.11,3.64,3.81,3.92],
+    "39.0":[2.42,2.51,2.65,3.13,3.66,3.83,3.94],"39.1":[2.44,2.53,2.67,3.15,3.68,3.85,3.96],
+    "39.2":[2.46,2.55,2.69,3.17,3.70,3.87,3.99],"39.3":[2.48,2.57,2.71,3.19,3.72,3.89,4.01],
+    "39.4":[2.50,2.59,2.73,3.21,3.74,3.91,4.03],"39.5":[2.51,2.61,2.74,3.22,3.76,3.93,4.04],
+    "39.6":[2.53,2.62,2.76,3.24,3.78,3.95,4.06],
+    "40.0":[2.55,2.64,2.78,3.26,3.80,3.97,4.08],"40.1":[2.56,2.66,2.80,3.28,3.82,3.99,4.10],
+    "40.2":[2.58,2.67,2.81,3.29,3.84,4.00,4.12],"40.3":[2.60,2.69,2.83,3.31,3.85,4.02,4.14],
+    "40.4":[2.61,2.70,2.84,3.33,3.87,4.04,4.15],"40.5":[2.63,2.72,2.86,3.34,3.89,4.05,4.17],
+    "40.6":[2.64,2.73,2.87,3.36,3.90,4.07,4.19],
+    "41.0":[2.65,2.75,2.89,3.37,3.92,4.09,4.20],"41.1":[2.67,2.76,2.90,3.39,3.93,4.10,4.22],
+    "41.2":[2.68,2.77,2.91,3.40,3.95,4.12,4.23],"41.3":[2.69,2.79,2.93,3.41,3.96,4.13,4.25],
+    "41.4":[2.71,2.80,2.94,3.43,3.97,4.15,4.26],"41.5":[2.72,2.81,2.95,3.44,3.99,4.16,4.27],
+    "41.6":[2.73,2.82,2.96,3.45,4.00,4.17,4.29],
+    "42.0":[2.74,2.84,2.98,3.46,4.01,4.19,4.30],"42.1":[2.75,2.85,2.99,3.48,4.03,4.20,4.31],
+    "42.2":[2.76,2.86,3.00,3.49,4.04,4.21,4.33],"42.3":[2.77,2.87,3.01,3.50,4.05,4.22,4.34],
+    "42.4":[2.78,2.88,3.02,3.51,4.06,4.23,4.35],"42.5":[2.79,2.89,3.03,3.52,4.07,4.24,4.36],
+    "42.6":[2.80,2.90,3.04,3.53,4.08,4.26,4.37]
+  }
+};
+
+// ============================================================
+// PERCENTILE CALCULATION (linear interpolation)
+// ============================================================
+function gaKey(weeks, days) { return weeks + '.' + days; }
+
+function calcPercentile(pesoKg, ref) {
+  // ref = [P3, P5, P10, P50, P90, P95, P97]
+  const [p3,p5,p10,p50,p90,p95,p97] = ref;
+  if (pesoKg < p3) return Math.max(3 * (pesoKg / p3), 0.1);
+  if (pesoKg < p5)  return 3 + (5 - 3) * (pesoKg - p3) / (p5 - p3);
+  if (pesoKg < p10) return 5 + (10 - 5) * (pesoKg - p5) / (p10 - p5);
+  if (pesoKg < p50) return 10 + (50 - 10) * (pesoKg - p10) / (p50 - p10);
+  if (pesoKg < p90) return 50 + (90 - 50) * (pesoKg - p50) / (p90 - p50);
+  if (pesoKg < p95) return 90 + (95 - 90) * (pesoKg - p90) / (p95 - p90);
+  if (pesoKg < p97) return 95 + (97 - 95) * (pesoKg - p95) / (p97 - p95);
+  return Math.min(97 + 3 * (1 - (p97 / pesoKg)), 99.9);
+}
+
+// ============================================================
+// UI STATE
+// ============================================================
+let chartInstance = null;
+let lastResult = null;
+let lastInputs = null;
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg; el.classList.add('show');
+}
+function clearError() { document.getElementById('errorMsg').classList.remove('show'); }
+
+function calcular() {
+  clearError();
+
+  const weeks = parseInt(document.getElementById('eg_weeks').value);
+  const days = parseInt(document.getElementById('eg_days').value) || 0;
+  const peso = parseFloat(document.getElementById('peso').value);
+  const sexo = document.getElementById('sexo').value;
+
+  if (isNaN(weeks) || isNaN(peso) || sexo === '') {
+    showError(t('errFill')); return;
+  }
+  if (weeks < 33 || weeks > 42 || days < 0 || days > 6 || (weeks === 42 && days > 6)) {
+    showError(t('errGA')); return;
+  }
+  if (peso < 500 || peso > 6000) { showError(t('errWt')); return; }
+
+  const key = gaKey(weeks, days);
+  const table = IG[sexo === 'M' ? 'M' : 'F'];
+  const ref = table[key];
+  if (!ref) { showError(t('errGA')); return; }
+
+  const pesoKg = peso / 1000;
+  const percentil = calcPercentile(pesoKg, ref);
+  const p50 = ref[3]; // P50 in kg
+
+  lastResult = { percentil, p50, ref, pesoKg };
+  lastInputs = { weeks, days, peso, sexo };
+
+  // Display
+  const panel = document.getElementById('resultPanel');
+  panel.className = 'result-panel show ' + classKey(percentil);
+
+  document.getElementById('percentileValue').textContent = 'P ' + percentil.toFixed(1);
+  document.getElementById('pesoObs').textContent = Math.round(peso) + ' g';
+  document.getElementById('pesoP50').textContent = Math.round(p50 * 1000) + ' g';
+  document.getElementById('ratioP50').textContent = (pesoKg / p50).toFixed(3);
+  updateClassificationText(percentil);
+
+  drawChart();
+}
+
+function redrawChart() { if (lastResult && lastInputs) drawChart(); }
+
+// Custom plugin to draw percentile label next to the case point
+const percentileLabelPlugin = {
+  id: 'percentileLabel',
+  afterDatasetsDraw(chart) {
+    if (!lastResult) return;
+    const dataset = chart.data.datasets[5];
+    if (!dataset) return;
+    const meta = chart.getDatasetMeta(5);
+    if (!meta || !meta.data) return;
+    for (let i = 0; i < dataset.data.length; i++) {
+      if (dataset.data[i] !== null && dataset.data[i] !== undefined) {
+        const pt = meta.data[i];
+        if (!pt) continue;
+        const ctx = chart.ctx;
+        const label = 'P ' + lastResult.percentil.toFixed(1);
+        ctx.save();
+        ctx.font = 'bold 12px "Segoe UI", system-ui, sans-serif';
+        ctx.fillStyle = '#C62828';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, pt.x + 12, pt.y - 1);
+        ctx.restore();
+        break;
+      }
+    }
+  }
+};
+
+function drawChart() {
+  const inp = lastInputs;
+  const card = document.getElementById('chartCard');
+  card.classList.add('show');
+
+  const table = IG[inp.sexo === 'M' ? 'M' : 'F'];
+
+  // Plot at whole weeks + every half-week for smoother curves
+  const gaValues = [];
+  for (let w = 33; w <= 42; w++) {
+    gaValues.push(w);
+    if (w < 42) gaValues.push(w + 0.5);
+  }
+
+  // Map half-weeks to table keys: 33.5 → "33.3" (approx 3.5 days)
+  // Actually: use whole weeks (day 0) and mid-week (day 3)
+  function gaToKey(ga) {
+    const w = Math.floor(ga);
+    const frac = ga - w;
+    const d = Math.round(frac * 7);
+    return w + '.' + Math.min(d, 6);
+  }
+
+  const p3=[], p10=[], p50=[], p90=[], p97=[];
+  gaValues.forEach(ga => {
+    const key = gaToKey(ga);
+    const ref = table[key];
+    if (ref) {
+      p3.push(Math.round(ref[0] * 1000));
+      p10.push(Math.round(ref[2] * 1000));
+      p50.push(Math.round(ref[3] * 1000));
+      p90.push(Math.round(ref[4] * 1000));
+      p97.push(Math.round(ref[6] * 1000));
+    } else {
+      p3.push(null); p10.push(null); p50.push(null); p90.push(null); p97.push(null);
+    }
+  });
+
+  // Case marker
+  const egDecimal = inp.weeks + inp.days / 7;
+  let closestIdx = 0, minDiff = Infinity;
+  gaValues.forEach((ga, i) => {
+    if (Math.abs(ga - egDecimal) < minDiff) { minDiff = Math.abs(ga - egDecimal); closestIdx = i; }
+  });
+  const caseData = new Array(gaValues.length).fill(null);
+  caseData[closestIdx] = inp.peso;
+
+  if (chartInstance) chartInstance.destroy();
+
+  const ctx = document.getElementById('chart').getContext('2d');
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: gaValues,
+      datasets: [
+        { label:'p3', data:p3, borderColor:'rgba(198,40,40,0.3)', borderWidth:1, borderDash:[4,4], pointRadius:0, fill:false, tension:0.4 },
+        { label:'p10', data:p10, borderColor:'#E65100', borderWidth:2, pointRadius:0, fill:false, tension:0.4 },
+        { label:'p50', data:p50, borderColor:'#00695C', borderWidth:2.5, pointRadius:0, fill:false, tension:0.4 },
+        { label:'p90', data:p90, borderColor:'#1565C0', borderWidth:2, pointRadius:0, fill:false, tension:0.4 },
+        { label:'p97', data:p97, borderColor:'rgba(21,101,192,0.3)', borderWidth:1, borderDash:[4,4], pointRadius:0, fill:false, tension:0.4 },
+        {
+          label: t('caseLabel'),
+          data: caseData,
+          borderColor: '#C62828',
+          backgroundColor: '#C62828',
+          pointRadius: 7,
+          pointHoverRadius: 9,
+          pointStyle: 'circle',
+          pointBorderWidth: 0,
+          showLine: false,
+          fill: false
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      resizeDelay: 100,
+      animation: { duration: 400 },
+      interaction: { mode:'index', intersect:false },
+      plugins: {
+        legend: {
+          position:'bottom',
+          labels: { usePointStyle:true, padding:14, font:{size:11},
+            filter: item => item.text!=='p3' && item.text!=='p97' }
+        },
+        tooltip: {
+          callbacks: {
+            title: items => t('tooltipWeek') + ' ' + items[0].label,
+            label: ctx => ctx.raw===null ? null : ctx.dataset.label+': '+ctx.raw+' g'
+          }
+        }
+      },
+      scales: {
+        x: {
+          title:{display:true, text:t('xAxis'), font:{size:12}},
+          ticks:{ callback: v => Number.isInteger(gaValues[v]) ? gaValues[v] : '', maxRotation:0 },
+          grid:{color:'rgba(0,0,0,0.05)'}
+        },
+        y: {
+          title:{display:true, text:t('yAxis'), font:{size:12}},
+          grid:{color:'rgba(0,0,0,0.05)'}
+        }
+      }
+    },
+    plugins: [percentileLabelPlugin]
+  });
+}
+
+// ============================================================
+// PDF EXPORT
+// ============================================================
+async function exportPDF() {
+  if (!lastResult || !lastInputs) return;
+  const r = lastResult, inp = lastInputs;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const W = 210, margin = 20, cw = W - 2*margin;
+  let y = margin;
+
+  // Title
+  doc.setFillColor(0, 105, 92);
+  doc.rect(0, 0, W, 36, 'F');
+  doc.setTextColor(255);
+  doc.setFontSize(16);
+  doc.setFont('helvetica','bold');
+  doc.text(t('pdfTitle'), W/2, 16, { align:'center' });
+  doc.setFontSize(9);
+  doc.setFont('helvetica','normal');
+  doc.text(new Date().toLocaleDateString(lang==='es'?'es-ES':'en-US',{year:'numeric',month:'long',day:'numeric'}), W/2, 26, { align:'center' });
+  y = 44;
+
+  doc.setTextColor(33);
+
+  // Data
+  doc.setFontSize(12);
+  doc.setFont('helvetica','bold');
+  doc.text(lang==='es' ? 'Datos del caso' : 'Case data', margin, y); y += 8;
+  doc.setFontSize(10);
+  doc.setFont('helvetica','normal');
+
+  const sexLabel = inp.sexo==='M' ? t('pdfMale') : t('pdfFemale');
+  const gaStr = inp.weeks + '+' + inp.days;
+
+  const rows = [
+    [t('pdfGA'), gaStr],
+    [t('pdfWeight'), inp.peso + ' g'],
+    [t('pdfSex'), sexLabel],
+  ];
+
+  rows.forEach(([lbl, val]) => {
+    doc.setFont('helvetica','bold');
+    doc.text(lbl + ':', margin, y);
+    doc.setFont('helvetica','normal');
+    doc.text(val, margin + 70, y);
+    y += 6;
+  });
+  y += 6;
+
+  // Results
+  doc.setFontSize(12);
+  doc.setFont('helvetica','bold');
+  doc.text(lang==='es' ? 'Resultado' : 'Result', margin, y); y += 8;
+
+  const ck = classKey(r.percentil);
+  const boxColor = ck==='iugr' ? [255,235,238] : ck==='peg' ? [255,243,224] : ck==='geg' ? [227,242,253] : [224,242,241];
+  const txtColor = ck==='iugr' ? [198,40,40] : ck==='peg' ? [230,81,0] : ck==='geg' ? [21,101,192] : [0,105,92];
+  doc.setFillColor(...boxColor);
+  doc.roundedRect(margin, y, cw, 24, 3, 3, 'F');
+  doc.setFontSize(22);
+  doc.setFont('helvetica','bold');
+  doc.setTextColor(...txtColor);
+  doc.text('P ' + r.percentil.toFixed(1), W/2, y + 10, { align:'center' });
+  doc.setFontSize(10);
+  doc.setFont('helvetica','normal');
+  doc.text(t(classKey(r.percentil)), W/2, y + 18, { align:'center' });
+  y += 32;
+
+  doc.setTextColor(33);
+  doc.setFontSize(10);
+  const resRows = [
+    [t('pdfP50'), Math.round(r.p50 * 1000) + ' g'],
+    [t('pdfRatio'), (r.pesoKg / r.p50).toFixed(3)],
+  ];
+  resRows.forEach(([lbl, val]) => {
+    doc.setFont('helvetica','bold');
+    doc.text(lbl + ':', margin, y);
+    doc.setFont('helvetica','normal');
+    doc.text(val, margin + 70, y);
+    y += 6;
+  });
+  y += 6;
+
+  // Chart image
+  const canvas = document.getElementById('chart');
+  if (canvas) {
+    const imgData = canvas.toDataURL('image/png', 1.0);
+    const imgW = cw;
+    const imgH = imgW / 1.6;
+    if (y + imgH > 280) { doc.addPage(); y = margin; }
+    doc.addImage(imgData, 'PNG', margin, y, imgW, imgH);
+    y += imgH + 6;
+  }
+
+  // Reference
+  if (y > 260) { doc.addPage(); y = margin; }
+  doc.setFontSize(7);
+  doc.setTextColor(144);
+  doc.text('Villar J, Cheikh Ismail L, Victora CG, Ohuma EO, Bertino E, Altman DG, et al.', margin, y); y += 3.5;
+  doc.text('International standards for newborn weight, length, and head circumference by gestational age and sex:', margin, y); y += 3.5;
+  doc.text('the Newborn Cross-Sectional Study of the INTERGROWTH-21st Project. Lancet. 2014;384(9946):857\u201368.', margin, y);
+
+  doc.save('intergrowth21_weight_report.pdf');
+}
+
+// Enter key
+document.addEventListener('keydown', e => { if (e.key === 'Enter') calcular(); });
+</script>
+</body>
+</html>
