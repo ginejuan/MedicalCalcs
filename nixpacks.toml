@@ -4,4 +4,4 @@ providers = ["node"]
 nixPkgs = ["nodejs_22", "npm-9_x"]
 
 [phases.install]
-cmds = ['npm install']
+cmds = ['rm -rf package-lock.json node_modules', 'npm install']
