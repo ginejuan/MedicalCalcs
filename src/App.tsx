@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { useEffect } from 'react';
 import { Home } from './pages/Home';
 import { FetalWeightCalculator } from './pages/FetalWeightCalculator';
 import { FetalBmiCalculator } from './pages/FetalBmiCalculator';
@@ -36,6 +37,13 @@ function Header() {
 }
 
 function App() {
+  // Redirect .org to .com preserving path and query
+  useEffect(() => {
+    if (window.location.hostname.toLowerCase().includes('medicalcalcs.org')) {
+      const newUrl = `https://MedicalCalcs.com${window.location.pathname}${window.location.search}`;
+      window.location.replace(newUrl);
+    }
+  }, []);
   return (
     <LanguageProvider>
       <BrowserRouter>
