@@ -230,7 +230,7 @@ export const translations = {
 };
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState<Language>('es');
+  const [language, setLanguage] = useState<Language>('en');
 
   const t = (key: keyof typeof translations.en) => {
     return translations[language][key] || translations.en[key];
