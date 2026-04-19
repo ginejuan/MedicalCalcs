@@ -155,15 +155,15 @@ export const FetalBmiCalculator: React.FC = () => {
             <Typography variant="h3" className="text-green" style={{ marginBottom: 'var(--space-md)' }}>{t('h_maternal')}</Typography>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)' }}>
-              <div>
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
                 <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>{t('lbl_height')} (cm)</label>
                 <input type="number" value={tallaM} onChange={e => setTallaM(e.target.value === '' ? '' : Number(e.target.value))} style={inputStyle} />
               </div>
-              <div>
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
                 <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>{t('lbl_weight_mat')} (kg)</label>
                 <input type="number" step="0.1" value={pesoPreg} onChange={e => setPesoPreg(e.target.value === '' ? '' : Number(e.target.value))} style={inputStyle} />
               </div>
-              <div>
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
                 <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>{t('lbl_parity')}</label>
                 <select value={paridad} onChange={e => setParidad(e.target.value === '' ? '' : Number(e.target.value))} style={inputStyle}>
                   <option value="" disabled>{t('opt_select')}</option>
@@ -171,7 +171,7 @@ export const FetalBmiCalculator: React.FC = () => {
                   <option value="1">{t('opt_multi')}</option>
                 </select>
               </div>
-              <div>
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
                 <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>{t('lbl_age')} ({t('unit_age')})</label>
                 <input type="number" value={edad} onChange={e => setEdad(e.target.value === '' ? '' : Number(e.target.value))} style={inputStyle} />
               </div>
