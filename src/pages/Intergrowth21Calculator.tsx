@@ -91,13 +91,23 @@ export const Intergrowth21Calculator: React.FC = () => {
   return (
     <div className="container" style={{ paddingBottom: 'var(--space-3xl)' }}>
       <div style={{ padding: 'var(--space-xl) 0', borderBottom: '1px solid var(--color-border)', marginBottom: 'var(--space-xl)' }}>
-        <Typography variant="caption" className="text-gold">NEONATAL STANDARDS</Typography>
-        <Typography variant="h1" style={{ fontSize: '2.5rem', marginTop: 'var(--space-sm)' }}>
+        <Typography variant="caption" className="text-gold" style={{ letterSpacing: '0.05em' }}>NEONATAL STANDARDS</Typography>
+        <Typography variant="h1" style={{ fontSize: '2rem', marginTop: 'var(--space-xs)' }}>
           {t('title_ig')}
         </Typography>
-        <Typography variant="body1" className="text-secondary" style={{ marginTop: 'var(--space-sm)' }}>
+        <Typography variant="body1" className="text-secondary" style={{ marginTop: 'var(--space-xs)' }}>
           {t('subtitle_ig')}
         </Typography>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: 'var(--space-lg)', fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
+            <div style={{ maxWidth: '70%', lineHeight: '1.4' }}>
+              Villar J, Cheikh Ismail L, Victora CG, et al. <br/>
+              <em>Lancet.</em> 2014;384(9946):857&ndash;68. <a href="https://doi.org/10.1016/S0140-6736(14)60932-6" target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>doi:10.1016/S0140-6736(14)60932-6</a>
+            </div>
+            <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+              &copy; 2026 Juan Jesús Fernández Alba
+            </div>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) 2fr', gap: 'var(--space-2xl)', alignItems: 'start' }}>
@@ -161,18 +171,18 @@ export const Intergrowth21Calculator: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {result ? (
              <>
-               <div className="card" style={{ padding: 'var(--space-2xl)', textAlign: 'center', borderColor: getResultColor(result.classificationRaw) }}>
+               <div className="card" style={{ padding: 'var(--space-lg)', textAlign: 'center', borderColor: getResultColor(result.classificationRaw) }}>
                   <Typography variant="caption" style={{ color: getResultColor(result.classificationRaw), fontWeight: 'bold' }}>
                     {t('percentileLabel_ig')}
                   </Typography>
-                  <Typography variant="h1" style={{ fontSize: '4rem', color: getResultColor(result.classificationRaw), marginBottom: 'var(--space-sm)' }}>
+                  <Typography variant="h1" style={{ fontSize: '3rem', color: getResultColor(result.classificationRaw), marginBottom: 'var(--space-xs)' }}>
                     P {result.percentil.toFixed(1)}
                   </Typography>
                   <Badge variant="solid" style={{ backgroundColor: getResultColor(result.classificationRaw), color: 'white' }}>
                     {t(getResultLocCode(result.classificationRaw))}
                   </Badge>
                   
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--space-md)', marginTop: 'var(--space-2xl)' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--space-sm)', marginTop: 'var(--space-xl)' }}>
                     <div>
                       <Typography variant="h3">{peso} g</Typography>
                       <Typography variant="caption">{t('lbl_weight')}</Typography>
