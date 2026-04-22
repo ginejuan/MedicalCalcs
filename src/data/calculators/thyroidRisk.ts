@@ -112,7 +112,12 @@ function computeAtaWarning(input: ThyroidRiskInput): string | undefined {
 
   // Diameter < 10 mm
   if (d < 10) {
-    if (input.microcalcOrIrregOrTall() || input.suspiciousNode) {
+    const hasHighRiskFeature =
+      input.calcifications === 'micro' ||
+      input.irregularMargins ||
+      input.tallerThanWide ||
+      input.suspiciousNode;
+    if (hasHighRiskFeature) {
       return 'CAUTION: In general, only nodules with a diameter equal to or greater than 10 mm should be studied. Assess the possibility of performing FNAB of the nodule.';
     }
     return 'CAUTION: In general, only nodules with a diameter equal to or greater than 10 mm should be studied.';
@@ -171,18 +176,9 @@ export function calculateThyroidRisk(input: ThyroidRiskInput): ThyroidRiskResult
   const logit = computeLogit(input);
   const risk  = plogis(logit) * 100;
 
-  // Augment input with helper for ATA (avoid inline method on plain object)
-  const augmented = {
-    ...input,
-    microcalcOrIrregOrTall: () =>
-      input.calcifications === 'micro' ||
-      input.irregularMargins ||
-      input.tallerThanWide,
-  };
-
   return {
     risk,
-    ataWarning:    computeAtaWarning(augmented),
+    ataWarning:    computeAtaWarning(input),
     cysticMessage: undefined,
     nodeMessage:   input.suspiciousNode
       ? 'It is recommended to perform FNAB of the suspected lymph node.'

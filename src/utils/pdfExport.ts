@@ -293,7 +293,6 @@ export const exportThyroidRiskPDF = (inputs: {
 
   // Result box
   const riskPct = result.isCysticBenign ? 0 : result.risk;
-  const isHigh = riskPct >= 50;
   const boxColor: [number, number, number] = riskPct < 5 ? [232, 245, 233] : riskPct < 15 ? [255, 243, 224] : riskPct < 50 ? [255, 235, 200] : [255, 235, 238];
   const txtColor: [number, number, number] = riskPct < 5 ? [46, 125, 50]  : riskPct < 15 ? [230, 81, 0]   : riskPct < 50 ? [188, 90, 0]   : [198, 40, 40];
   const riskLabel = result.isCysticBenign
