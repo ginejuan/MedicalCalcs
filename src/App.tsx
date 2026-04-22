@@ -4,6 +4,7 @@ import { Home } from './pages/Home';
 import { FetalWeightCalculator } from './pages/FetalWeightCalculator';
 import { FetalBmiCalculator } from './pages/FetalBmiCalculator';
 import { Intergrowth21Calculator } from './pages/Intergrowth21Calculator';
+import { ThyroidRiskCalculator } from './pages/ThyroidRiskCalculator';
 import { Badge } from './components/ui/Badge';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 
@@ -55,6 +56,7 @@ function App() {
               <Route path="/fetal-weight" element={<FetalWeightCalculator />} />
               <Route path="/fetal-bmi" element={<FetalBmiCalculator />} />
               <Route path="/intergrowth21" element={<Intergrowth21Calculator />} />
+              <Route path="/thyroid-risk" element={<ThyroidRiskCalculator />} />
             </Routes>
           </main>
           <footer className="container" style={{ padding: 'var(--space-2xl) var(--space-xl)', borderTop: '1px solid var(--color-border)', marginTop: 'auto' }}>

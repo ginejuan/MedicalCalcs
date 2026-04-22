@@ -189,7 +189,7 @@ export const Home: React.FC = () => {
               Endocrinology
             </Typography>
           </div>
-          <Badge variant="outline">COMING SOON</Badge>
+          <Badge variant="outline">1 CALCULATOR</Badge>
         </div>
 
         <div style={{ 
@@ -198,8 +198,11 @@ export const Home: React.FC = () => {
           gap: 'var(--space-xl)' 
         }}>
           <Card 
-            title="More calculators"
-            description=""
+            category="THYROID"
+            title={language === 'en' ? 'Thyroid Nodule Malignancy Risk Calculator' : 'Calculadora de Riesgo de Malignidad de Nódulo Tiroideo'}
+            description={language === 'en' ? 'Individualized cancer risk assessment for thyroid nodules using a validated logistic regression model (AUC = 0.93).' : 'Evaluación individualizada del riesgo de cáncer en nódulos tiroideos mediante un modelo de regresión logística validado (AUC = 0,93).'}
+            link="/thyroid-risk"
+            activeBorder={true}
           />
         </div>
       </section>
