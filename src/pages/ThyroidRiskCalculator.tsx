@@ -7,22 +7,87 @@ import { exportThyroidRiskPDF } from '../utils/pdfExport';
 import type { ThyroidRiskInput, Echogenicity, Calcifications, Consistency } from '../data/calculators/thyroidRisk';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+// Thresholds from Diagnostics 2025 external validation:
+//   4.94 = maximum-sensitivity threshold
+//   9.55 = optimal cut-off (Youden)
+
+type RiskZone = 'benign' | 'low' | 'intermediate' | 'high';
+
+function getRiskZone(risk: number, isBenign: boolean): RiskZone {
+  if (isBenign) return 'benign';
+  if (risk < 4.94) return 'low';
+  if (risk < 9.55) return 'intermediate';
+  return 'high';
+}
 
 function getRiskColor(risk: number, isBenign: boolean): string {
-  if (isBenign) return 'var(--color-accent-green)';
-  if (risk < 5)  return 'var(--color-accent-green)';
-  if (risk < 15) return '#eab308';   // yellow/gold
-  if (risk < 50) return '#f97316';   // orange
-  return '#ef4444';                   // red
+  const z = getRiskZone(risk, isBenign);
+  if (z === 'benign' || z === 'low') return 'var(--color-accent-green)';
+  if (z === 'intermediate')          return '#eab308';
+  return '#ef4444';
 }
 
-function getRiskLabel(risk: number, isBenign: boolean): string {
-  if (isBenign)  return 'BENIGN (CYSTIC)';
-  if (risk < 5)  return 'VERY LOW RISK';
-  if (risk < 15) return 'LOW RISK';
-  if (risk < 50) return 'INTERMEDIATE RISK';
-  return 'HIGH RISK';
+function getRiskLabel(risk: number, isBenign: boolean, lang: 'en' | 'es'): string {
+  const z = getRiskZone(risk, isBenign);
+  if (z === 'benign')       return lang === 'en' ? 'BENIGN (CYSTIC)'   : 'BENIGNO (QUÍSTICO)';
+  if (z === 'low')          return lang === 'en' ? 'LOW RISK'          : 'RIESGO BAJO';
+  if (z === 'intermediate') return lang === 'en' ? 'INTERMEDIATE RISK' : 'RIESGO INTERMEDIO';
+  return                           lang === 'en' ? 'HIGH RISK'         : 'RIESGO ALTO';
 }
+
+// ─── Clinical interpretation card (3-zone stratification) ────────────────────
+const RiskInterpretation: React.FC<{ risk: number; language: 'en' | 'es' }> = ({ risk, language }) => {
+  const zone: Exclude<RiskZone, 'benign'> = risk < 4.94 ? 'low' : risk < 9.55 ? 'intermediate' : 'high';
+  const zoneColor = zone === 'low' ? 'var(--color-accent-green)' : zone === 'intermediate' ? '#eab308' : '#ef4444';
+
+  const zoneTitle =
+    zone === 'low'          ? (language === 'en' ? 'Low risk'          : 'Riesgo bajo')
+    : zone === 'intermediate' ? (language === 'en' ? 'Intermediate risk' : 'Riesgo intermedio')
+                              : (language === 'en' ? 'High risk'         : 'Riesgo alto');
+
+  const interpretation =
+    zone === 'low'
+      ? (language === 'en'
+          ? 'Low risk of malignancy. Within this range, the model provides no net clinical benefit over the standard strategy.'
+          : 'Bajo riesgo de malignidad. En este rango, el modelo no aporta beneficio clínico neto sobre la estrategia estándar.')
+      : zone === 'intermediate'
+        ? (language === 'en'
+            ? 'Uncertainty zone. Above the maximum-sensitivity threshold (4.94%) but below the optimal cut-off (9.55%). The decision should be individualized based on the clinical context and patient preference.'
+            : 'Zona de incertidumbre. Por encima del umbral de máxima sensibilidad (4,94%) pero por debajo del punto de corte óptimo (9,55%). La decisión debe individualizarse según el contexto clínico y la preferencia del paciente.')
+        : (language === 'en'
+            ? 'High risk of malignancy. Consider FNA or thyroidectomy according to clinical indication and ATA criteria.'
+            : 'Alto riesgo de malignidad. Considerar PAAF o tiroidectomía según indicación clínica y criterios ATA.');
+
+  const metrics =
+    zone === 'high'
+      ? (language === 'en'
+          ? 'Sensitivity 71.4% · Specificity 82.4% at the optimal cut-off of 9.55%'
+          : 'Sensibilidad 71,4% · Especificidad 82,4% al punto de corte óptimo de 9,55%')
+      : (language === 'en'
+          ? 'Sensitivity 80.6% · Specificity 70.9% at the alternative threshold of 4.94%'
+          : 'Sensibilidad 80,6% · Especificidad 70,9% al umbral alternativo de 4,94%');
+
+  const disclaimer = language === 'en'
+    ? 'This tool supports clinical decision-making but does not replace it. Clinician judgment prevails.'
+    : 'Esta herramienta apoya la decisión clínica, no la sustituye. El juicio del facultativo prevalece.';
+
+  return (
+    <div className="card" style={{ padding: 'var(--space-lg)', borderLeft: `3px solid ${zoneColor}` }}>
+      <Typography variant="h3" style={{ color: zoneColor, marginBottom: 'var(--space-sm)', fontSize: '0.95rem', fontWeight: 'bold', letterSpacing: '0.03em' }}>
+        {language === 'en' ? 'Clinical interpretation' : 'Interpretación clínica'} · {zoneTitle}
+      </Typography>
+      <Typography variant="body2" style={{ marginBottom: 'var(--space-md)', lineHeight: 1.5 }}>
+        {interpretation}
+      </Typography>
+      <Typography variant="body2" style={{ color: 'var(--color-text-secondary)', fontSize: '0.78rem', marginBottom: 'var(--space-sm)' }}>
+        {metrics}
+      </Typography>
+      <Typography variant="caption" style={{ fontStyle: 'italic', fontSize: '0.72rem', color: 'var(--color-text-muted)', display: 'block', paddingTop: 'var(--space-sm)', borderTop: '1px solid var(--color-border)' }}>
+        {disclaimer}
+      </Typography>
+    </div>
+  );
+};
 
 // ─── Input Style (shared) ─────────────────────────────────────────────────────
 const inputStyle: React.CSSProperties = {
@@ -119,6 +184,11 @@ export const ThyroidRiskCalculator: React.FC = () => {
           <div style={{ maxWidth: '70%', lineHeight: '1.4' }}>
             Carral F, Fernández Alba JJ, Jiménez JM, et al.<br/>
             <em>Endocr Pract.</em> 2020;26(10):1077–1084. <a href="https://doi.org/10.4158/EP-2020-0053" target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>doi:10.4158/EP-2020-0053</a>
+            <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px dashed var(--color-border)' }}>
+              <em>{language === 'en' ? 'External validation:' : 'Validación externa:'}</em><br/>
+              Fernández Alba JJ, Carral F, Ayala Ortega C, et al.<br/>
+              <em>Diagnostics.</em> 2025;15(6):686. <a href="https://doi.org/10.3390/diagnostics15060686" target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>doi:10.3390/diagnostics15060686</a>
+            </div>
           </div>
           <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
             © 2026 Juan Jesús Fernández Alba
@@ -274,8 +344,8 @@ export const ThyroidRiskCalculator: React.FC = () => {
           <div style={{ marginTop: 'var(--space-md)', padding: 'var(--space-md)', borderTop: '1px solid var(--color-border)' }}>
             <Typography variant="body2" style={{ color: 'var(--color-text-secondary)', fontStyle: 'italic', fontSize: '0.75rem' }}>
               {language === 'en'
-                ? 'AUC = 0.93 (95% CI: 0.91–0.95). Accuracy = 0.87. Kappa = 0.60 (10-fold cross-validation).'
-                : 'AUC = 0.93 (IC 95%: 0.91–0.95). Precisión = 0.87. Kappa = 0.60 (validación cruzada 10-fold).'}
+                ? 'External validation (n = 455 patients): AUC = 0.84 (95% CI: 0.80–0.89). Sensitivity 71.4% · Specificity 82.4% at the optimal cut-off of 9.55%.'
+                : 'Validación externa (n = 455 pacientes): AUC = 0,84 (IC 95%: 0,80–0,89). Sensibilidad 71,4% · Especificidad 82,4% al punto de corte óptimo de 9,55%.'}
             </Typography>
           </div>
         </div>
@@ -294,8 +364,8 @@ export const ThyroidRiskCalculator: React.FC = () => {
                   {result.isCysticBenign ? '0' : result.risk.toFixed(1)}%
                 </Typography>
 
-                <Badge variant="solid" style={{ backgroundColor: riskColor, color: result.risk >= 50 ? 'white' : '#0a0e17' }}>
-                  {getRiskLabel(result.risk, result.isCysticBenign)}
+                <Badge variant="solid" style={{ backgroundColor: riskColor, color: (!result.isCysticBenign && result.risk >= 9.55) ? 'white' : '#0a0e17' }}>
+                  {getRiskLabel(result.risk, result.isCysticBenign, language)}
                 </Badge>
 
                 {/* Risk gauge bar */}
@@ -326,27 +396,9 @@ export const ThyroidRiskCalculator: React.FC = () => {
                 </div>
               )}
 
-              {/* Risk interpretation table */}
+              {/* Clinical interpretation (3-zone stratification from Diagnostics 2025) */}
               {!result.isCysticBenign && (
-                <div className="card" style={{ padding: 'var(--space-lg)' }}>
-                  <Typography variant="h3" style={{ marginBottom: 'var(--space-md)', fontSize: '0.9rem' }}>
-                    {language === 'en' ? 'Risk stratification' : 'Estratificación del riesgo'}
-                  </Typography>
-                  {[
-                    { range: '< 5%',    label: language === 'en' ? 'Very low risk' : 'Riesgo muy bajo',     color: 'var(--color-accent-green)' },
-                    { range: '5–14%',   label: language === 'en' ? 'Low risk'      : 'Riesgo bajo',         color: '#eab308' },
-                    { range: '15–49%',  label: language === 'en' ? 'Intermediate'  : 'Riesgo intermedio',   color: '#f97316' },
-                    { range: '≥ 50%',   label: language === 'en' ? 'High risk'     : 'Riesgo alto',         color: '#ef4444' },
-                  ].map(row => (
-                    <div key={row.range} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', padding: '6px 0', borderBottom: '1px solid var(--color-border)' }}>
-                      <span style={{ width: '50px', fontSize: '0.8rem', fontWeight: 'bold', color: row.color }}>{row.range}</span>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{row.label}</span>
-                      {result.risk >= parseFloat(row.range) && !row.range.startsWith('≥') && result.risk < parseFloat(row.range.split('–')[1] || '100') && (
-                        <span style={{ marginLeft: 'auto', color: row.color, fontSize: '0.75rem' }}>◀ {language === 'en' ? 'current result' : 'resultado actual'}</span>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                <RiskInterpretation risk={result.risk} language={language} />
               )}
 
               {/* PDF export button */}

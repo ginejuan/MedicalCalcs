@@ -219,7 +219,7 @@ export const exportThyroidRiskPDF = (inputs: {
   // Title block
   const titleText = lang === 'es' ? 'Informe de Riesgo de Nódulo Tiroideo' : 'Thyroid Nodule Malignancy Risk Report';
   doc.setFillColor(84, 110, 122);   // #546E7A — consistent with other calc buttons
-  doc.rect(0, 0, W, 36, 'F');
+  doc.rect(0, 0, W, 42, 'F');
   doc.setTextColor(255);
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
@@ -228,10 +228,15 @@ export const exportThyroidRiskPDF = (inputs: {
   doc.setFont('helvetica', 'normal');
   doc.text(
     new Date().toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-    W / 2, 24, { align: 'center' }
+    W / 2, 22, { align: 'center' }
   );
-  doc.text('Carral F, Fernández Alba JJ, et al. Endocr Pract. 2020;26(10):1077–1084', W / 2, 31, { align: 'center' });
-  y = 44;
+  doc.text('Carral F, Fernández Alba JJ, et al. Endocr Pract. 2020;26(10):1077–1084', W / 2, 30, { align: 'center' });
+  doc.text(
+    (lang === 'es' ? 'Validación externa: ' : 'External validation: ') +
+      'Fernández Alba JJ, Carral F, et al. Diagnostics. 2025;15(6):686',
+    W / 2, 37, { align: 'center' }
+  );
+  y = 50;
 
   doc.setTextColor(33);
 
@@ -291,16 +296,16 @@ export const exportThyroidRiskPDF = (inputs: {
   });
   y += 6;
 
-  // Result box
+  // Result box — 3-zone stratification from Diagnostics 2025 external validation
+  // (4.94 = maximum-sensitivity threshold; 9.55 = optimal cut-off)
   const riskPct = result.isCysticBenign ? 0 : result.risk;
-  const boxColor: [number, number, number] = riskPct < 5 ? [232, 245, 233] : riskPct < 15 ? [255, 243, 224] : riskPct < 50 ? [255, 235, 200] : [255, 235, 238];
-  const txtColor: [number, number, number] = riskPct < 5 ? [46, 125, 50]  : riskPct < 15 ? [230, 81, 0]   : riskPct < 50 ? [188, 90, 0]   : [198, 40, 40];
+  const boxColor: [number, number, number] = riskPct < 4.94 ? [232, 245, 233] : riskPct < 9.55 ? [255, 243, 224] : [255, 235, 238];
+  const txtColor: [number, number, number] = riskPct < 4.94 ? [46, 125, 50]  : riskPct < 9.55 ? [230, 81, 0]   : [198, 40, 40];
   const riskLabel = result.isCysticBenign
     ? (lang === 'es' ? 'BENIGNO (QUÍSTICO)' : 'BENIGN (CYSTIC)')
-    : riskPct < 5  ? (lang === 'es' ? 'RIESGO MUY BAJO'    : 'VERY LOW RISK')
-    : riskPct < 15 ? (lang === 'es' ? 'RIESGO BAJO'        : 'LOW RISK')
-    : riskPct < 50 ? (lang === 'es' ? 'RIESGO INTERMEDIO'  : 'INTERMEDIATE RISK')
-    :                (lang === 'es' ? 'RIESGO ALTO'        : 'HIGH RISK');
+    : riskPct < 4.94 ? (lang === 'es' ? 'RIESGO BAJO'        : 'LOW RISK')
+    : riskPct < 9.55 ? (lang === 'es' ? 'RIESGO INTERMEDIO'  : 'INTERMEDIATE RISK')
+    :                  (lang === 'es' ? 'RIESGO ALTO'        : 'HIGH RISK');
 
   doc.setFillColor(...boxColor);
   doc.roundedRect(margin, y, cw, 26, 3, 3, 'F');
@@ -332,8 +337,8 @@ export const exportThyroidRiskPDF = (inputs: {
   if (y > 270) { doc.addPage(); y = margin; }
   doc.setFontSize(9); doc.setTextColor(80);
   const statsText = lang === 'es'
-    ? 'Rendimiento del modelo: AUC = 0,93 (IC95%: 0,91–0,95). Precisión = 0,87. Kappa = 0,60 (validación cruzada 10-fold).'
-    : 'Model performance: AUC = 0.93 (95% CI: 0.91–0.95). Accuracy = 0.87. Kappa = 0.60 (10-fold cross-validation).';
+    ? 'Validación externa (n = 455 pacientes): AUC = 0,84 (IC 95%: 0,80–0,89). Sensibilidad 71,4% · Especificidad 82,4% al punto de corte óptimo de 9,55%.'
+    : 'External validation (n = 455 patients): AUC = 0.84 (95% CI: 0.80–0.89). Sensitivity 71.4% · Specificity 82.4% at the optimal cut-off of 9.55%.';
   doc.text(doc.splitTextToSize(statsText, cw), margin, y); y += 12;
 
   // Disclaimer
