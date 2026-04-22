@@ -40,14 +40,34 @@ export const Home: React.FC = () => {
           marginBottom: 'var(--space-2xl)',
         }}>
           {/* Affiliations */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {[
-              { icon: '🏥', text: 'Hospital Universitario Puerto Real · Cádiz, España' },
-              { icon: '🔬', text: 'Instituto de Investigación e Innovación Biomédica de Cádiz (INIBICA)' },
-              { icon: '🎓', text: 'Universidad de Cádiz' },
-            ].map(({ icon, text }) => (
-              <div key={text} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '0.85rem' }}>{icon}</span>
+              {
+                logo: 'https://hospitalpuertoreal.es/wp-content/uploads/2025/08/Logo-HUPuertoReal.png',
+                alt: 'Hospital Universitario Puerto Real',
+                text: 'Hospital Universitario Puerto Real · Cádiz, España',
+                height: 28,
+              },
+              {
+                logo: 'https://inibica.es/wp-content/uploads/2022/09/INiBICA_logo.webp',
+                alt: 'INIBICA',
+                text: 'Instituto de Investigación e Innovación Biomédica de Cádiz (INIBICA)',
+                height: 22,
+              },
+              {
+                logo: 'https://www.uca.es/wp-content/themes/theme_main_uca/images/logoFooterUCA_05.png',
+                alt: 'Universidad de Cádiz',
+                text: 'Universidad de Cádiz',
+                height: 26,
+              },
+            ].map(({ logo, alt, text, height }) => (
+              <div key={text} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <img
+                  src={logo}
+                  alt={alt}
+                  height={height}
+                  style={{ height: `${height}px`, width: 'auto', objectFit: 'contain', opacity: 0.85, filter: 'brightness(0) invert(1)' }}
+                />
                 <span style={{ fontSize: '0.78rem', color: 'var(--color-text-secondary)', letterSpacing: '0.01em' }}>
                   {text}
                 </span>
