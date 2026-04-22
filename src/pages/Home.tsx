@@ -113,13 +113,13 @@ export const Home: React.FC = () => {
         {/* Stats */}
         <div className="flex" style={{ gap: 'var(--space-2xl)', alignItems: 'center' }}>
           <div>
-            <Typography variant="h2" style={{ fontSize: '2rem' }}>3</Typography>
+            <Typography variant="h2" style={{ fontSize: '2rem' }}>4</Typography>
             <Typography variant="caption">CALCULATORS</Typography>
           </div>
           <div style={{ width: '1px', height: '40px', backgroundColor: 'var(--color-border)' }}></div>
           <div>
-            <Typography variant="h2" style={{ fontSize: '2rem' }}>1</Typography>
-            <Typography variant="caption">SPECIALTY</Typography>
+            <Typography variant="h2" style={{ fontSize: '2rem' }}>2</Typography>
+            <Typography variant="caption">SPECIALTIES</Typography>
           </div>
           <div style={{ width: '1px', height: '40px', backgroundColor: 'var(--color-border)' }}></div>
           <div>
