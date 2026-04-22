@@ -27,6 +27,69 @@ export const Home: React.FC = () => {
           </Typography>
         </div>
 
+        {/* Author / Affiliation strip */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          flexWrap: 'wrap',
+          gap: 'var(--space-lg)',
+          padding: 'var(--space-lg) 0',
+          borderTop: '1px solid var(--color-border)',
+          borderBottom: '1px solid var(--color-border)',
+          marginBottom: 'var(--space-2xl)',
+        }}>
+          {/* Affiliations */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {[
+              { icon: '🏥', text: 'Hospital Universitario Puerto Real · Cádiz, España' },
+              { icon: '🔬', text: 'Instituto de Investigación e Innovación Biomédica de Cádiz (INIBICA)' },
+              { icon: '🎓', text: 'Universidad de Cádiz' },
+            ].map(({ icon, text }) => (
+              <div key={text} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '0.85rem' }}>{icon}</span>
+                <span style={{ fontSize: '0.78rem', color: 'var(--color-text-secondary)', letterSpacing: '0.01em' }}>
+                  {text}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Copyright + CC licence */}
+          <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+            <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', letterSpacing: '0.04em' }}>
+              © 2026 Prof. Dr. Juan Jesús Fernández Alba
+            </span>
+            <a
+              href="https://creativecommons.org/licenses/by-nc/4.0/"
+              target="_blank"
+              rel="noreferrer"
+              title="Creative Commons Attribution-NonCommercial 4.0 International"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                fontSize: '0.7rem',
+                color: 'var(--color-text-muted)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '2px 8px',
+                textDecoration: 'none',
+                letterSpacing: '0.03em',
+                transition: 'color var(--transition-fast)',
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                <circle cx="12" cy="12" r="11" stroke="currentColor" strokeWidth="2"/>
+                <text x="12" y="8" textAnchor="middle" fill="currentColor" fontSize="7" fontFamily="sans-serif" fontWeight="bold">CC</text>
+                <text x="6.5" y="17" textAnchor="middle" fill="currentColor" fontSize="7" fontFamily="sans-serif">BY</text>
+                <text x="17.5" y="17" textAnchor="middle" fill="currentColor" fontSize="7" fontFamily="sans-serif">NC</text>
+              </svg>
+              CC BY-NC 4.0 — Non-commercial use
+            </a>
+          </div>
+        </div>
+
         {/* Stats */}
         <div className="flex" style={{ gap: 'var(--space-2xl)', alignItems: 'center' }}>
           <div>
