@@ -2,6 +2,8 @@ import jsPDF from 'jspdf';
 import { translations } from '../contexts/LanguageContext';
 import { BRCA_CRITERIA } from '../data/calculators/brcaCriteria';
 import type { BrcaAnswers, BrcaCriterion, BrcaResult } from '../data/calculators/brcaCriteria';
+import { IOTA_FEATURES } from '../data/calculators/iotaRules';
+import type { IotaAnswers, IotaFeature, IotaResult } from '../data/calculators/iotaRules';
 
 type Language = 'es' | 'en';
 
@@ -480,5 +482,151 @@ export const exportBrcaPDF = (answers: BrcaAnswers, result: BrcaResult, lang: La
   doc.text(doc.splitTextToSize(disc, cw), margin, y);
 
   doc.save('brca_testing_indication.pdf');
+};
+
+export const exportIotaPDF = (answers: IotaAnswers, result: IotaResult, lang: Language) => {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W = 210, margin = 20, cw = W - 2 * margin;
+  let y = margin;
+
+  // Title block
+  const titleText = lang === 'es'
+    ? 'Clasificación IOTA Simple Rules (masas anexiales)'
+    : 'IOTA Simple Rules (adnexal masses)';
+  doc.setFillColor(84, 110, 122);   // #546E7A — consistent with other calc PDFs
+  doc.rect(0, 0, W, 36, 'F');
+  doc.setTextColor(255);
+  doc.setFontSize(15);
+  doc.setFont('helvetica', 'bold');
+  doc.text(titleText, W / 2, 14, { align: 'center' });
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.text(
+    new Date().toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+    W / 2, 24, { align: 'center' }
+  );
+  doc.text(
+    'Timmerman D, Van Calster B, et al. Am J Obstet Gynecol. 2016;214(4):424–437',
+    W / 2, 31, { align: 'center' }
+  );
+  y = 44;
+
+  doc.setTextColor(33);
+
+  // Section header
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text(lang === 'es' ? 'Hallazgos ecográficos evaluados' : 'Ultrasound findings evaluated', margin, y); y += 7;
+
+  const renderGroup = (title: string, items: readonly IotaFeature[], markerColor: [number, number, number]) => {
+    if (y > 260) { doc.addPage(); y = margin; }
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(markerColor[0], markerColor[1], markerColor[2]);
+    doc.text(title, margin, y); y += 6;
+    doc.setTextColor(33);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    items.forEach(f => {
+      const label = `${f.short}. ${lang === 'es' ? f.es : f.en}`;
+      const ans = answers[f.id];
+      const wrapped = doc.splitTextToSize(label, cw - 8) as string[];
+      const needed = wrapped.length * 5 + 1;
+      if (y + needed > 278) { doc.addPage(); y = margin; }
+      const boxSize = 2.8;
+      const boxX = margin;
+      const boxY = y - 2.6;
+      if (ans) {
+        doc.setFillColor(markerColor[0], markerColor[1], markerColor[2]);
+        doc.setDrawColor(markerColor[0], markerColor[1], markerColor[2]);
+        doc.rect(boxX, boxY, boxSize, boxSize, 'FD');
+      } else {
+        doc.setDrawColor(140, 140, 140);
+        doc.rect(boxX, boxY, boxSize, boxSize, 'D');
+      }
+      doc.setTextColor(33);
+      doc.text(wrapped, margin + 5, y);
+      y += needed;
+    });
+    y += 3;
+  };
+
+  renderGroup(
+    lang === 'es' ? 'Rasgos B (signos de benignidad)' : 'B-features (benign signs)',
+    IOTA_FEATURES.filter(f => f.group === 'benign'),
+    [46, 125, 50]
+  );
+  renderGroup(
+    lang === 'es' ? 'Rasgos M (signos de malignidad)' : 'M-features (malignant signs)',
+    IOTA_FEATURES.filter(f => f.group === 'malignant'),
+    [198, 40, 40]
+  );
+
+  // Result box
+  if (y + 32 > 280) { doc.addPage(); y = margin; }
+  const cls = result.classification;
+  const boxColor: [number, number, number] =
+    cls === 'benign'       ? [232, 245, 233] :
+    cls === 'malignant'    ? [255, 235, 238] :
+    cls === 'inconclusive' ? [255, 243, 224] :
+                             [235, 235, 235];
+  const txtColor: [number, number, number] =
+    cls === 'benign'       ? [46, 125, 50]   :
+    cls === 'malignant'    ? [198, 40, 40]   :
+    cls === 'inconclusive' ? [230, 81, 0]    :
+                             [100, 100, 100];
+  const resultLabel =
+    cls === 'benign'       ? (lang === 'es' ? 'SOSPECHOSO DE BENIGNIDAD' : 'SUSPECTED BENIGN')
+    : cls === 'malignant'  ? (lang === 'es' ? 'SOSPECHOSO DE MALIGNIDAD' : 'SUSPECTED MALIGNANT')
+    : cls === 'inconclusive' ? (lang === 'es' ? 'INDETERMINADO'           : 'INCONCLUSIVE')
+    :                          (lang === 'es' ? 'SIN RASGOS SELECCIONADOS' : 'NO FEATURES SELECTED');
+  const countText = lang === 'es'
+    ? `${result.benignMet.length} rasgos B · ${result.malignantMet.length} rasgos M`
+    : `${result.benignMet.length} B-features · ${result.malignantMet.length} M-features`;
+
+  y += 4;
+  doc.setFillColor(boxColor[0], boxColor[1], boxColor[2]);
+  doc.roundedRect(margin, y, cw, 24, 3, 3, 'F');
+  doc.setFontSize(13); doc.setFont('helvetica', 'bold');
+  doc.setTextColor(txtColor[0], txtColor[1], txtColor[2]);
+  doc.text(resultLabel, W / 2, y + 10, { align: 'center' });
+  doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+  doc.text(countText, W / 2, y + 18, { align: 'center' });
+  y += 32;
+
+  doc.setTextColor(33);
+
+  // Clinical note
+  if (y > 260) { doc.addPage(); y = margin; }
+  doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+  const noteText =
+    cls === 'benign'
+      ? (lang === 'es'
+          ? 'Solo hay rasgos B presentes. Según las Reglas Simples IOTA, la masa se clasifica como sospechosa de benignidad. El juicio clínico debe siempre prevalecer.'
+          : 'Only B-features are present. According to IOTA Simple Rules, this mass is classified as suspected benign. Clinical judgement must always prevail.')
+      : cls === 'malignant'
+        ? (lang === 'es'
+            ? 'Solo hay rasgos M presentes. Según las Reglas Simples IOTA, la masa se clasifica como sospechosa de malignidad. Derivar para valoración oncológica y estadificación.'
+            : 'Only M-features are present. According to IOTA Simple Rules, this mass is classified as suspected malignant. Refer for oncologic evaluation and staging.')
+        : cls === 'inconclusive'
+          ? (lang === 'es'
+              ? 'Coexisten rasgos B y M — las Reglas Simples IOTA no permiten clasificar esta masa. Revalorar por ecografista experto o aplicar un modelo más amplio (p. ej. IOTA ADNEX).'
+              : 'B and M features coexist — IOTA Simple Rules cannot classify this mass. Re-evaluate by an expert sonographer or apply a more extensive model (e.g. IOTA ADNEX).')
+          : (lang === 'es'
+              ? 'No se ha marcado ningún rasgo ecográfico.'
+              : 'No ultrasound features were selected.');
+  const noteLines = doc.splitTextToSize(noteText, cw) as string[];
+  doc.text(noteLines, margin, y);
+  y += noteLines.length * 5 + 4;
+
+  // Disclaimer
+  if (y > 265) { doc.addPage(); y = margin; }
+  doc.setFontSize(7); doc.setTextColor(100);
+  const disc = lang === 'es'
+    ? 'Esta calculadora está diseñada para uso exclusivo de profesionales sanitarios. La información arrojada debe ser siempre interpretada por un profesional y no sustituye la consulta médica ni ninguna actuación diagnóstica ni terapéutica. Los autores no se hacen responsables del uso inapropiado de la misma.'
+    : 'This calculator is designed for exclusive use by healthcare professionals. The information provided must always be interpreted by a professional and should not replace medical consultation or any diagnostic or therapeutic procedure.';
+  doc.text(doc.splitTextToSize(disc, cw), margin, y);
+
+  doc.save('iota_simple_rules.pdf');
 };
 

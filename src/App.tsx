@@ -6,6 +6,7 @@ import { FetalBmiCalculator } from './pages/FetalBmiCalculator';
 import { Intergrowth21Calculator } from './pages/Intergrowth21Calculator';
 import { ThyroidRiskCalculator } from './pages/ThyroidRiskCalculator';
 import { BrcaCalculator } from './pages/BrcaCalculator';
+import { IotaCalculator } from './pages/IotaCalculator';
 import { Badge } from './components/ui/Badge';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 
@@ -59,6 +60,7 @@ function App() {
               <Route path="/intergrowth21" element={<Intergrowth21Calculator />} />
               <Route path="/thyroid-risk" element={<ThyroidRiskCalculator />} />
               <Route path="/brca" element={<BrcaCalculator />} />
+              <Route path="/iota-simple-rules" element={<IotaCalculator />} />
             </Routes>
           </main>
           <footer className="container" style={{ padding: 'var(--space-2xl) var(--space-xl)', borderTop: '1px solid var(--color-border)', marginTop: 'auto' }}>

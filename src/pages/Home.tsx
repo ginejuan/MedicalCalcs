@@ -83,7 +83,7 @@ export const Home: React.FC = () => {
         {/* Stats */}
         <div className="flex" style={{ gap: 'var(--space-2xl)', alignItems: 'center' }}>
           <div>
-            <Typography variant="h2" style={{ fontSize: '2rem' }}>5</Typography>
+            <Typography variant="h2" style={{ fontSize: '2rem' }}>6</Typography>
             <Typography variant="caption">CALCULATORS</Typography>
           </div>
           <div style={{ width: '1px', height: '40px', backgroundColor: 'var(--color-border)' }}></div>
@@ -159,7 +159,7 @@ export const Home: React.FC = () => {
               Gynecologic Oncology
             </Typography>
           </div>
-          <Badge variant="outline">1 CALCULATOR</Badge>
+          <Badge variant="outline">2 CALCULATORS</Badge>
         </div>
 
         <div style={{
@@ -168,11 +168,17 @@ export const Home: React.FC = () => {
           gap: 'var(--space-xl)'
         }}>
           <Card
+            category="ADNEXAL MASS ULTRASOUND"
+            title={language === 'en' ? 'IOTA Simple Rules (adnexal masses)' : 'Reglas Simples IOTA (masas anexiales)'}
+            description={language === 'en' ? 'Ultrasound-based classification of adnexal masses into benign, malignant or inconclusive using the 10 Simple Rules from the International Ovarian Tumor Analysis (IOTA) group.' : 'Clasificación ecográfica de masas anexiales en benigna, maligna o indeterminada mediante las 10 Reglas Simples del grupo International Ovarian Tumor Analysis (IOTA).'}
+            link="/iota-simple-rules"
+            activeBorder={true}
+          />
+          <Card
             category="HEREDITARY CANCER"
             title={language === 'en' ? 'BRCA Genetic Testing Indication' : 'Indicación de prueba genética BRCA'}
             description={language === 'en' ? 'Rule-based screening tool following SEOM clinical guidelines to assess whether BRCA1/BRCA2 genetic testing is indicated in hereditary breast and ovarian cancer (HBOC).' : 'Herramienta de cribado basada en criterios de las guías clínicas SEOM para evaluar la indicación de estudio genético de BRCA1/BRCA2 en cáncer de mama y ovario hereditario (HBOC).'}
             link="/brca"
-            activeBorder={true}
           />
         </div>
       </section>
