@@ -3,6 +3,7 @@ import { Typography } from '../components/ui/Typography';
 import { Badge } from '../components/ui/Badge';
 import { useLanguage } from '../contexts/LanguageContext';
 import { calculateThyroidRisk } from '../data/calculators/thyroidRisk';
+import { exportThyroidRiskPDF } from '../utils/pdfExport';
 import type { ThyroidRiskInput, Echogenicity, Calcifications, Consistency } from '../data/calculators/thyroidRisk';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -73,9 +74,9 @@ export const ThyroidRiskCalculator: React.FC = () => {
 
   function handleCalculate() {
     setError('');
-    if (age < 16 || age > 89)        { setError('Age must be between 16 and 89 years.'); return; }
-    if (tsh < 0 || tsh > 30)         { setError('TSH must be between 0 and 30 mUI/L.'); return; }
-    if (diameter < 1 || diameter > 80) { setError('Diameter must be between 1 and 80 mm.'); return; }
+    if (age < 16 || age > 89)         { setError('Age must be between 16 and 89 years.'); return; }
+    if (tsh < 0 || tsh > 30)          { setError('TSH must be between 0 and 30 mUI/L.'); return; }
+    if (diameter < 1 || diameter > 80){ setError('Diameter must be between 1 and 80 mm.'); return; }
 
     const input: ThyroidRiskInput = {
       age, sex, familyHistory, tsh, thyroiditis, diameter,
@@ -87,6 +88,15 @@ export const ThyroidRiskCalculator: React.FC = () => {
       suspiciousNode,
     };
     setResult(calculateThyroidRisk(input));
+  }
+
+  function handleExportPDF() {
+    if (!result) return;
+    exportThyroidRiskPDF(
+      { age, sex, familyHistory, tsh, thyroiditis, diameter, consistency, echogenicity, irregularMargins, calcifications, tallerThanWide, suspiciousNode },
+      result,
+      language
+    );
   }
 
   const riskColor = result ? getRiskColor(result.risk, result.isCysticBenign) : 'var(--color-accent-green)';
@@ -338,6 +348,15 @@ export const ThyroidRiskCalculator: React.FC = () => {
                   ))}
                 </div>
               )}
+
+              {/* PDF export button */}
+              <button onClick={handleExportPDF} style={{
+                backgroundColor: '#546E7A', color: 'white', padding: '10px 16px',
+                borderRadius: '6px', fontWeight: 'bold', border: 'none', cursor: 'pointer',
+                transition: 'background 0.2s', marginTop: 'var(--space-sm)', width: '100%',
+              }}>
+                {language === 'en' ? 'Export to PDF' : 'Exportar a PDF'}
+              </button>
 
               {/* Disclaimer */}
               <div className="card" style={{ padding: 'var(--space-lg)', opacity: 0.7 }}>

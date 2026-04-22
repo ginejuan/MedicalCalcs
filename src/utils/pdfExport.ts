@@ -197,3 +197,154 @@ export const exportIntergrowth21PDF = (inputs: any, results: any, lang: Language
   const finalDoc = drawPDFBase(doc, t('pdfTitle_ig'), lang, patientRows, resultRows, results.percentil, getClassKey(results.percentil));
   finalDoc.save('intergrowth21.pdf');
 };
+
+export const exportThyroidRiskPDF = (inputs: {
+  age: number;
+  sex: 'female' | 'male';
+  familyHistory: boolean;
+  tsh: number;
+  thyroiditis: boolean;
+  diameter: number;
+  consistency: string;
+  echogenicity: string;
+  irregularMargins: boolean;
+  calcifications: string;
+  tallerThanWide: boolean;
+  suspiciousNode: boolean;
+}, result: { risk: number; ataWarning?: string; cysticMessage?: string; nodeMessage?: string; isCysticBenign: boolean }, lang: Language) => {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W = 210, margin = 20, cw = W - 2 * margin;
+  let y = margin;
+
+  // Title block
+  const titleText = lang === 'es' ? 'Informe de Riesgo de Nódulo Tiroideo' : 'Thyroid Nodule Malignancy Risk Report';
+  doc.setFillColor(84, 110, 122);   // #546E7A — consistent with other calc buttons
+  doc.rect(0, 0, W, 36, 'F');
+  doc.setTextColor(255);
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text(titleText, W / 2, 14, { align: 'center' });
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.text(
+    new Date().toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+    W / 2, 24, { align: 'center' }
+  );
+  doc.text('Carral F, Fernández Alba JJ, et al. Endocr Pract. 2020;26(10):1077–1084', W / 2, 31, { align: 'center' });
+  y = 44;
+
+  doc.setTextColor(33);
+
+  // Section A — Patient
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text(lang === 'es' ? 'A. Características del paciente' : 'A. Patient characteristics', margin, y); y += 8;
+  doc.setFontSize(10);
+
+  const section_a: [string, string][] = [
+    [lang === 'es' ? 'Edad' : 'Age',                      `${inputs.age} ${lang === 'es' ? 'años' : 'years'}`],
+    [lang === 'es' ? 'Sexo' : 'Sex',                      inputs.sex === 'male' ? (lang === 'es' ? 'Hombre' : 'Male') : (lang === 'es' ? 'Mujer' : 'Female')],
+    [lang === 'es' ? 'Antec. familiar CDT' : 'Family history',  inputs.familyHistory ? (lang === 'es' ? 'Sí' : 'Yes') : 'No'],
+    ['TSH',                                                 `${inputs.tsh.toFixed(1)} mUI/L`],
+    [lang === 'es' ? 'Tiroiditis autoinmune' : 'Autoimmune thyroiditis', inputs.thyroiditis ? (lang === 'es' ? 'Sí' : 'Yes') : 'No'],
+  ];
+  section_a.forEach(([lbl, val]) => {
+    doc.setFont('helvetica', 'bold'); doc.text(lbl + ':', margin, y);
+    doc.setFont('helvetica', 'normal'); doc.text(val, margin + 80, y); y += 6;
+  });
+  y += 4;
+
+  // Section B — Nodule
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text(lang === 'es' ? 'B. Características ecográficas' : 'B. Ultrasound characteristics', margin, y); y += 8;
+  doc.setFontSize(10);
+
+  const consistencyLabel: Record<string, string> = {
+    cystic: lang === 'es' ? 'Quístico' : 'Cystic',
+    mixed:  lang === 'es' ? 'Mixto/Espongiforme' : 'Mixed/Spongiform',
+    solid:  lang === 'es' ? 'Sólido' : 'Solid',
+  };
+  const echoLabel: Record<string, string> = {
+    anechoic: lang === 'es' ? 'Anecoico' : 'Anechoic',
+    isoHyper: lang === 'es' ? 'Isoecoico/Hiperecoico' : 'Isoechoic/Hyperechoic',
+    hypo:     lang === 'es' ? 'Hipoecoico' : 'Hypoechoic',
+  };
+  const calcLabel: Record<string, string> = {
+    no:    'No',
+    macro: lang === 'es' ? 'Macrocalcificaciones' : 'Macrocalcifications',
+    micro: lang === 'es' ? 'Microcalcificaciones' : 'Microcalcifications',
+  };
+
+  const section_b: [string, string][] = [
+    [lang === 'es' ? 'Diámetro máximo' : 'Maximum diameter', `${inputs.diameter} mm`],
+    [lang === 'es' ? 'Contenido' : 'Content',               consistencyLabel[inputs.consistency] ?? inputs.consistency],
+    [lang === 'es' ? 'Ecogenicidad' : 'Echogenicity',       echoLabel[inputs.echogenicity] ?? inputs.echogenicity],
+    [lang === 'es' ? 'Márgenes' : 'Margins',                inputs.irregularMargins ? (lang === 'es' ? 'Irregulares' : 'Irregular') : (lang === 'es' ? 'Regulares' : 'Well-defined')],
+    [lang === 'es' ? 'Calcificaciones' : 'Calcifications',  calcLabel[inputs.calcifications] ?? inputs.calcifications],
+    [lang === 'es' ? 'Forma' : 'Shape',                     inputs.tallerThanWide ? (lang === 'es' ? 'Más alto que ancho' : 'Taller than wide') : (lang === 'es' ? 'Ovalado' : 'Oval')],
+    [lang === 'es' ? 'Ganglio sospechoso' : 'Suspicious node', inputs.suspiciousNode ? (lang === 'es' ? 'Sí' : 'Yes') : 'No'],
+  ];
+  section_b.forEach(([lbl, val]) => {
+    doc.setFont('helvetica', 'bold'); doc.text(lbl + ':', margin, y);
+    doc.setFont('helvetica', 'normal'); doc.text(val, margin + 80, y); y += 6;
+  });
+  y += 6;
+
+  // Result box
+  const riskPct = result.isCysticBenign ? 0 : result.risk;
+  const isHigh = riskPct >= 50;
+  const boxColor: [number, number, number] = riskPct < 5 ? [232, 245, 233] : riskPct < 15 ? [255, 243, 224] : riskPct < 50 ? [255, 235, 200] : [255, 235, 238];
+  const txtColor: [number, number, number] = riskPct < 5 ? [46, 125, 50]  : riskPct < 15 ? [230, 81, 0]   : riskPct < 50 ? [188, 90, 0]   : [198, 40, 40];
+  const riskLabel = result.isCysticBenign
+    ? (lang === 'es' ? 'BENIGNO (QUÍSTICO)' : 'BENIGN (CYSTIC)')
+    : riskPct < 5  ? (lang === 'es' ? 'RIESGO MUY BAJO'    : 'VERY LOW RISK')
+    : riskPct < 15 ? (lang === 'es' ? 'RIESGO BAJO'        : 'LOW RISK')
+    : riskPct < 50 ? (lang === 'es' ? 'RIESGO INTERMEDIO'  : 'INTERMEDIATE RISK')
+    :                (lang === 'es' ? 'RIESGO ALTO'        : 'HIGH RISK');
+
+  doc.setFillColor(...boxColor);
+  doc.roundedRect(margin, y, cw, 26, 3, 3, 'F');
+  doc.setFontSize(24); doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...txtColor);
+  doc.text(`${riskPct.toFixed(result.isCysticBenign ? 0 : 1)}%`, W / 2, y + 10, { align: 'center' });
+  doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+  doc.text(riskLabel, W / 2, y + 20, { align: 'center' });
+  y += 34;
+
+  doc.setTextColor(33);
+
+  // Clinical alerts
+  const alerts = [result.ataWarning, result.cysticMessage, result.nodeMessage].filter(Boolean) as string[];
+  if (alerts.length > 0) {
+    doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+    doc.setTextColor(200, 80, 0);
+    doc.text(lang === 'es' ? 'Alertas clínicas:' : 'Clinical alerts:', margin, y); y += 7;
+    doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(33);
+    alerts.forEach(a => {
+      const lines = doc.splitTextToSize(a, cw) as string[];
+      if (y + lines.length * 5 > 280) { doc.addPage(); y = margin; }
+      doc.text(lines, margin, y); y += lines.length * 5 + 3;
+    });
+    y += 4;
+  }
+
+  // Model statistics
+  if (y > 270) { doc.addPage(); y = margin; }
+  doc.setFontSize(9); doc.setTextColor(80);
+  const statsText = lang === 'es'
+    ? 'Rendimiento del modelo: AUC = 0,93 (IC95%: 0,91–0,95). Precisión = 0,87. Kappa = 0,60 (validación cruzada 10-fold).'
+    : 'Model performance: AUC = 0.93 (95% CI: 0.91–0.95). Accuracy = 0.87. Kappa = 0.60 (10-fold cross-validation).';
+  doc.text(doc.splitTextToSize(statsText, cw), margin, y); y += 12;
+
+  // Disclaimer
+  if (y > 265) { doc.addPage(); y = margin; }
+  doc.setFontSize(7); doc.setTextColor(100);
+  const disc = lang === 'es'
+    ? 'Esta calculadora está diseñada para uso exclusivo de profesionales sanitarios. La información arrojada debe ser siempre interpretada por un profesional y no sustituye la consulta médica ni ninguna actuación diagnóstica ni terapéutica. Los autores no se hacen responsables del uso inapropiado de la misma.'
+    : 'This calculator is designed for exclusive use by healthcare professionals. The information provided must always be interpreted by a professional and should not replace medical consultation or any diagnostic or therapeutic procedure.';
+  doc.text(doc.splitTextToSize(disc, cw), margin, y);
+
+  doc.save('thyroid_nodule_risk.pdf');
+};
+
