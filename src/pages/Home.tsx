@@ -200,7 +200,7 @@ export const Home: React.FC = () => {
           <Card 
             category="THYROID"
             title={language === 'en' ? 'Thyroid Nodule Malignancy Risk Calculator' : 'Calculadora de Riesgo de Malignidad de Nódulo Tiroideo'}
-            description={language === 'en' ? 'Individualized cancer risk assessment for thyroid nodules using a validated logistic regression model (AUC = 0.93).' : 'Evaluación individualizada del riesgo de cáncer en nódulos tiroideos mediante un modelo de regresión logística validado (AUC = 0,93).'}
+            description={language === 'en' ? 'Individualized cancer risk assessment for thyroid nodules using an externally validated logistic regression model (AUC = 0.84).' : 'Evaluación individualizada del riesgo de cáncer en nódulos tiroideos mediante un modelo de regresión logística con validación externa (AUC = 0,84).'}
             link="/thyroid-risk"
             activeBorder={true}
           />
