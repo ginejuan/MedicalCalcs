@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Typography } from '../components/ui/Typography';
 import { Badge } from '../components/ui/Badge';
+import { CopyrightCC } from '../components/ui/CopyrightCC';
 import { useLanguage } from '../contexts/LanguageContext';
 import { calculateThyroidRisk } from '../data/calculators/thyroidRisk';
 import { exportThyroidRiskPDF } from '../utils/pdfExport';
@@ -190,9 +191,7 @@ export const ThyroidRiskCalculator: React.FC = () => {
               <em>Diagnostics.</em> 2025;15(6):686. <a href="https://doi.org/10.3390/diagnostics15060686" target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>doi:10.3390/diagnostics15060686</a>
             </div>
           </div>
-          <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-            © 2026 Juan Jesús Fernández Alba
-          </div>
+          <CopyrightCC />
         </div>
       </div>
 

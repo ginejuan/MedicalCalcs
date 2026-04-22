@@ -2,6 +2,7 @@ import React from 'react';
 import { Typography } from '../components/ui/Typography';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
+import { CopyrightCC } from '../components/ui/CopyrightCC';
 import { useLanguage } from '../contexts/LanguageContext';
 
 export const Home: React.FC = () => {
@@ -76,49 +77,18 @@ export const Home: React.FC = () => {
           </div>
 
           {/* Copyright + CC licence */}
-          <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
-            <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', letterSpacing: '0.04em' }}>
-              © 2026 Prof. Dr. Juan Jesús Fernández Alba
-            </span>
-            <a
-              href="https://creativecommons.org/licenses/by-nc/4.0/"
-              target="_blank"
-              rel="noreferrer"
-              title="Creative Commons Attribution-NonCommercial 4.0 International"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '5px',
-                fontSize: '0.7rem',
-                color: 'var(--color-text-muted)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--radius-sm)',
-                padding: '2px 8px',
-                textDecoration: 'none',
-                letterSpacing: '0.03em',
-                transition: 'color var(--transition-fast)',
-              }}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-                <circle cx="12" cy="12" r="11" stroke="currentColor" strokeWidth="2"/>
-                <text x="12" y="8" textAnchor="middle" fill="currentColor" fontSize="7" fontFamily="sans-serif" fontWeight="bold">CC</text>
-                <text x="6.5" y="17" textAnchor="middle" fill="currentColor" fontSize="7" fontFamily="sans-serif">BY</text>
-                <text x="17.5" y="17" textAnchor="middle" fill="currentColor" fontSize="7" fontFamily="sans-serif">NC</text>
-              </svg>
-              CC BY-NC 4.0 — Non-commercial use
-            </a>
-          </div>
+          <CopyrightCC />
         </div>
 
         {/* Stats */}
         <div className="flex" style={{ gap: 'var(--space-2xl)', alignItems: 'center' }}>
           <div>
-            <Typography variant="h2" style={{ fontSize: '2rem' }}>4</Typography>
+            <Typography variant="h2" style={{ fontSize: '2rem' }}>5</Typography>
             <Typography variant="caption">CALCULATORS</Typography>
           </div>
           <div style={{ width: '1px', height: '40px', backgroundColor: 'var(--color-border)' }}></div>
           <div>
-            <Typography variant="h2" style={{ fontSize: '2rem' }}>2</Typography>
+            <Typography variant="h2" style={{ fontSize: '2rem' }}>3</Typography>
             <Typography variant="caption">SPECIALTIES</Typography>
           </div>
           <div style={{ width: '1px', height: '40px', backgroundColor: 'var(--color-border)' }}></div>
@@ -174,12 +144,45 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
+      {/* Gynecologic Oncology Section */}
+      <section style={{ marginTop: 'var(--space-3xl)' }}>
+        <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-2xl)' }}>
+          <div className="flex items-center" style={{ gap: 'var(--space-md)' }}>
+            <div style={{
+              width: '40px', height: '40px', borderRadius: '50%',
+              backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ec4899'
+            }}>
+               ⬢
+            </div>
+            <Typography variant="h3" style={{ fontSize: '1.5rem', fontWeight: 400 }} className="font-serif">
+              Gynecologic Oncology
+            </Typography>
+          </div>
+          <Badge variant="outline">1 CALCULATOR</Badge>
+        </div>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+          gap: 'var(--space-xl)'
+        }}>
+          <Card
+            category="HEREDITARY CANCER"
+            title={language === 'en' ? 'BRCA Genetic Testing Indication' : 'Indicación de prueba genética BRCA'}
+            description={language === 'en' ? 'Rule-based screening tool following SEOM clinical guidelines to assess whether BRCA1/BRCA2 genetic testing is indicated in hereditary breast and ovarian cancer (HBOC).' : 'Herramienta de cribado basada en criterios de las guías clínicas SEOM para evaluar la indicación de estudio genético de BRCA1/BRCA2 en cáncer de mama y ovario hereditario (HBOC).'}
+            link="/brca"
+            activeBorder={true}
+          />
+        </div>
+      </section>
+
       {/* Endocrinology Section */}
       <section style={{ marginTop: 'var(--space-3xl)' }}>
         <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-2xl)' }}>
           <div className="flex items-center" style={{ gap: 'var(--space-md)' }}>
             <div style={{
-              width: '40px', height: '40px', borderRadius: '50%', 
+              width: '40px', height: '40px', borderRadius: '50%',
               backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a855f7'
             }}>
@@ -192,12 +195,12 @@ export const Home: React.FC = () => {
           <Badge variant="outline">1 CALCULATOR</Badge>
         </div>
 
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', 
-          gap: 'var(--space-xl)' 
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+          gap: 'var(--space-xl)'
         }}>
-          <Card 
+          <Card
             category="THYROID"
             title={language === 'en' ? 'Thyroid Nodule Malignancy Risk Calculator' : 'Calculadora de Riesgo de Malignidad de Nódulo Tiroideo'}
             description={language === 'en' ? 'Individualized cancer risk assessment for thyroid nodules using an externally validated logistic regression model (AUC = 0.84).' : 'Evaluación individualizada del riesgo de cáncer en nódulos tiroideos mediante un modelo de regresión logística con validación externa (AUC = 0,84).'}

@@ -4,6 +4,7 @@ import { Badge } from '../components/ui/Badge';
 import { computeIntergrowthPercentile, IG, gaKey, type IntergrowthResult } from '../data/calculators/intergrowth21Logic';
 import { useLanguage } from '../contexts/LanguageContext';
 import { PercentileChart } from '../components/ui/PercentileChart';
+import { CopyrightCC } from '../components/ui/CopyrightCC';
 import { exportIntergrowth21PDF } from '../utils/pdfExport';
 
 export const Intergrowth21Calculator: React.FC = () => {
@@ -104,9 +105,7 @@ export const Intergrowth21Calculator: React.FC = () => {
               Villar J, Cheikh Ismail L, Victora CG, et al. <br/>
               <em>Lancet.</em> 2014;384(9946):857&ndash;68. <a href="https://doi.org/10.1016/S0140-6736(14)60932-6" target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>doi:10.1016/S0140-6736(14)60932-6</a>
             </div>
-            <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-              &copy; 2026 Juan Jesús Fernández Alba
-            </div>
+            <CopyrightCC />
         </div>
       </div>
 

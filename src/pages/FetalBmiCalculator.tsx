@@ -5,6 +5,7 @@ import { computePercentile, expectedImcAtGa, CV_IMC, type FetalBmiResult } from 
 import { normInv } from '../data/calculators/fetalWeightLogic';
 import { useLanguage } from '../contexts/LanguageContext';
 import { PercentileChart } from '../components/ui/PercentileChart';
+import { CopyrightCC } from '../components/ui/CopyrightCC';
 import { exportFetalBmiPDF } from '../utils/pdfExport';
 
 export const FetalBmiCalculator: React.FC = () => {
@@ -105,9 +106,7 @@ export const FetalBmiCalculator: React.FC = () => {
               Fernández Alba JJ, Castillo Lara M, Jiménez Heras JM, et al. <br/>
               <em>Diagnostics.</em> 2025;15(7):877. <a href="https://doi.org/10.3390/diagnostics15070877" target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>doi:10.3390/diagnostics15070877</a>
             </div>
-            <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-              &copy; 2026 Juan Jesús Fernández Alba
-            </div>
+            <CopyrightCC />
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import { Badge } from '../components/ui/Badge';
 import { computePercentile, expectedWeightAtGa, CV_PESO, normInv, type FetalWeightResult } from '../data/calculators/fetalWeightLogic';
 import { useLanguage } from '../contexts/LanguageContext';
 import { PercentileChart } from '../components/ui/PercentileChart';
+import { CopyrightCC } from '../components/ui/CopyrightCC';
 import { exportFetalWeightPDF } from '../utils/pdfExport';
 
 export const FetalWeightCalculator: React.FC = () => {
@@ -104,9 +105,7 @@ export const FetalWeightCalculator: React.FC = () => {
               Fernández-Alba JJ, González-Macías C, León Del Pino R, et al. <br/>
               <em>Fetal Diagn Ther.</em> 2016;39(3):198&ndash;208. <a href="https://doi.org/10.1159/000433428" target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>doi:10.1159/000433428</a>
             </div>
-            <div style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-              &copy; 2026 Juan Jesús Fernández Alba
-            </div>
+            <CopyrightCC />
         </div>
       </div>
 

@@ -1,5 +1,7 @@
 import jsPDF from 'jspdf';
 import { translations } from '../contexts/LanguageContext';
+import { BRCA_CRITERIA } from '../data/calculators/brcaCriteria';
+import type { BrcaAnswers, BrcaCriterion, BrcaResult } from '../data/calculators/brcaCriteria';
 
 type Language = 'es' | 'en';
 
@@ -350,5 +352,133 @@ export const exportThyroidRiskPDF = (inputs: {
   doc.text(doc.splitTextToSize(disc, cw), margin, y);
 
   doc.save('thyroid_nodule_risk.pdf');
+};
+
+export const exportBrcaPDF = (answers: BrcaAnswers, result: BrcaResult, lang: Language) => {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W = 210, margin = 20, cw = W - 2 * margin;
+  let y = margin;
+
+  // Title block
+  const titleText = lang === 'es'
+    ? 'Indicación de Prueba Genética BRCA'
+    : 'BRCA Genetic Testing Indication';
+  doc.setFillColor(84, 110, 122);   // #546E7A — consistent with other calc PDFs
+  doc.rect(0, 0, W, 36, 'F');
+  doc.setTextColor(255);
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text(titleText, W / 2, 14, { align: 'center' });
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.text(
+    new Date().toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+    W / 2, 24, { align: 'center' }
+  );
+  doc.text(
+    'González-Santiago S, et al. SEOM HBOC guidelines. Clin Transl Oncol. 2020;22(2):193–200',
+    W / 2, 31, { align: 'center' }
+  );
+  y = 44;
+
+  doc.setTextColor(33);
+
+  // Section header
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text(lang === 'es' ? 'Criterios evaluados' : 'Criteria evaluated', margin, y); y += 7;
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+
+  const renderGroup = (title: string, items: readonly BrcaCriterion[]) => {
+    if (y > 260) { doc.addPage(); y = margin; }
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text(title, margin, y); y += 6;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    items.forEach(c => {
+      const label = lang === 'es' ? c.es : c.en;
+      const ans = answers[c.id];
+      const wrapped = doc.splitTextToSize(label, cw - 8) as string[];
+      const needed = wrapped.length * 5 + 1;
+      if (y + needed > 278) { doc.addPage(); y = margin; }
+      // Draw checkbox square (avoids jsPDF WinAnsi missing-glyph issue)
+      const boxSize = 2.8;
+      const boxX = margin;
+      const boxY = y - 2.6;
+      if (ans) {
+        doc.setFillColor(198, 40, 40);
+        doc.setDrawColor(198, 40, 40);
+        doc.rect(boxX, boxY, boxSize, boxSize, 'FD');
+      } else {
+        doc.setDrawColor(140, 140, 140);
+        doc.rect(boxX, boxY, boxSize, boxSize, 'D');
+      }
+      doc.setTextColor(33);
+      doc.text(wrapped, margin + 5, y);
+      y += needed;
+    });
+    y += 3;
+  };
+
+  renderGroup(
+    lang === 'es' ? 'A. Antecedentes personales oncológicos' : 'A. Personal oncologic history',
+    BRCA_CRITERIA.filter(c => c.group === 'personal')
+  );
+  renderGroup(
+    lang === 'es' ? 'B. Antecedentes familiares y ascendencia' : 'B. Family history & ancestry',
+    BRCA_CRITERIA.filter(c => c.group === 'family')
+  );
+
+  // Result box
+  if (y + 32 > 280) { doc.addPage(); y = margin; }
+  const indicated = result.indicated;
+  const boxColor: [number, number, number] = indicated ? [255, 235, 238] : [232, 245, 233];
+  const txtColor: [number, number, number] = indicated ? [198, 40, 40]  : [46, 125, 50];
+  const resultLabel = indicated
+    ? (lang === 'es' ? 'SE RECOMIENDA PRUEBA GENÉTICA BRCA' : 'BRCA GENETIC TESTING INDICATED')
+    : (lang === 'es' ? 'NO SE INDICA PRUEBA GENÉTICA BRCA'  : 'BRCA GENETIC TESTING NOT INDICATED');
+  const countText = indicated
+    ? (lang === 'es'
+        ? `${result.criteriaMet.length} criterio${result.criteriaMet.length === 1 ? '' : 's'} cumplido${result.criteriaMet.length === 1 ? '' : 's'}`
+        : `${result.criteriaMet.length} ${result.criteriaMet.length === 1 ? 'criterion' : 'criteria'} met`)
+    : (lang === 'es' ? 'Ningún criterio SEOM cumplido' : 'No SEOM criteria met');
+
+  y += 4;
+  doc.setFillColor(boxColor[0], boxColor[1], boxColor[2]);
+  doc.roundedRect(margin, y, cw, 24, 3, 3, 'F');
+  doc.setFontSize(13); doc.setFont('helvetica', 'bold');
+  doc.setTextColor(txtColor[0], txtColor[1], txtColor[2]);
+  doc.text(resultLabel, W / 2, y + 10, { align: 'center' });
+  doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+  doc.text(countText, W / 2, y + 18, { align: 'center' });
+  y += 32;
+
+  doc.setTextColor(33);
+
+  // Clinical note
+  if (y > 260) { doc.addPage(); y = margin; }
+  doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+  const noteText = indicated
+    ? (lang === 'es'
+        ? 'Según las guías SEOM HBOC, el paciente cumple al menos un criterio para derivación a estudio genético de BRCA1/BRCA2. La decisión debe individualizarse y siempre estar precedida de consejo genético.'
+        : 'According to SEOM HBOC guidelines, this patient meets at least one criterion for BRCA1/BRCA2 genetic testing referral. The decision should always be individualized and preceded by genetic counselling.')
+    : (lang === 'es'
+        ? 'No se cumplen criterios SEOM HBOC para estudio de BRCA. El juicio clínico y el contexto individual deben prevalecer sobre la regla de cribado.'
+        : 'No SEOM HBOC criteria for BRCA testing are met. Clinical judgment and individual context should always prevail over the screening rule.');
+  const noteLines = doc.splitTextToSize(noteText, cw) as string[];
+  doc.text(noteLines, margin, y);
+  y += noteLines.length * 5 + 4;
+
+  // Disclaimer
+  if (y > 265) { doc.addPage(); y = margin; }
+  doc.setFontSize(7); doc.setTextColor(100);
+  const disc = lang === 'es'
+    ? 'Esta calculadora está diseñada para uso exclusivo de profesionales sanitarios. La información arrojada debe ser siempre interpretada por un profesional y no sustituye la consulta médica ni ninguna actuación diagnóstica ni terapéutica. Los autores no se hacen responsables del uso inapropiado de la misma.'
+    : 'This calculator is designed for exclusive use by healthcare professionals. The information provided must always be interpreted by a professional and should not replace medical consultation or any diagnostic or therapeutic procedure.';
+  doc.text(doc.splitTextToSize(disc, cw), margin, y);
+
+  doc.save('brca_testing_indication.pdf');
 };
 
