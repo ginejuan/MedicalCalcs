@@ -83,7 +83,7 @@ export const Home: React.FC = () => {
         {/* Stats */}
         <div className="flex" style={{ gap: 'var(--space-2xl)', alignItems: 'center' }}>
           <div>
-            <Typography variant="h2" style={{ fontSize: '2rem' }}>6</Typography>
+            <Typography variant="h2" style={{ fontSize: '2rem' }}>7</Typography>
             <Typography variant="caption">CALCULATORS</Typography>
           </div>
           <div style={{ width: '1px', height: '40px', backgroundColor: 'var(--color-border)' }}></div>
@@ -114,7 +114,7 @@ export const Home: React.FC = () => {
               Perinatology
             </Typography>
           </div>
-          <Badge variant="outline">3 CALCULATORS</Badge>
+          <Badge variant="outline">4 CALCULATORS</Badge>
         </div>
 
         <div style={{ 
@@ -140,6 +140,13 @@ export const Home: React.FC = () => {
             title={t('title_ig')}
             description={t('intergrowthCalcDesc')}
             link="/intergrowth21"
+          />
+          <Card 
+            category="GESTATIONAL DIABETES"
+            title={language === 'en' ? 'GDM Risk Calculator' : 'Calculadora de Riesgo de Diabetes Gestacional (GDM)'}
+            description={language === 'en' ? 'Individualized risk assessment for early and late gestational diabetes using regression models developed on a cohort of 3,981 pregnancies.' : 'Evaluación individualizada del riesgo de diabetes gestacional precoz y tardía basada en modelos de regresión de una cohorte de 3.981 gestaciones.'}
+            link="/gdm-risk"
+            activeBorder={true}
           />
         </div>
       </section>

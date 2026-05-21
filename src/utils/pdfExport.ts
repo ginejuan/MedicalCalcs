@@ -4,6 +4,8 @@ import { BRCA_CRITERIA } from '../data/calculators/brcaCriteria';
 import type { BrcaAnswers, BrcaCriterion, BrcaResult } from '../data/calculators/brcaCriteria';
 import { IOTA_FEATURES } from '../data/calculators/iotaRules';
 import type { IotaAnswers, IotaFeature, IotaResult } from '../data/calculators/iotaRules';
+import type { GdmRiskInput, GdmRiskResult } from '../data/calculators/gdmRisk';
+import { getBmiCategory } from '../data/calculators/gdmRisk';
 
 type Language = 'es' | 'en';
 
@@ -628,5 +630,203 @@ export const exportIotaPDF = (answers: IotaAnswers, result: IotaResult, lang: La
   doc.text(doc.splitTextToSize(disc, cw), margin, y);
 
   doc.save('iota_simple_rules.pdf');
+};
+
+export const exportGdmRiskPDF = (inputs: GdmRiskInput, result: GdmRiskResult, lang: Language) => {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W = 210, margin = 20, cw = W - 2 * margin;
+  let y = margin;
+
+  // Title block
+  const titleText = lang === 'es'
+    ? 'Informe de Riesgo de Diabetes Gestacional (GDM)'
+    : 'Gestational Diabetes Mellitus (GDM) Risk Report';
+  doc.setFillColor(84, 110, 122);   // #546E7A
+  doc.rect(0, 0, W, 36, 'F');
+  doc.setTextColor(255);
+  doc.setFontSize(15);
+  doc.setFont('helvetica', 'bold');
+  doc.text(titleText, W / 2, 14, { align: 'center' });
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.text(
+    new Date().toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+    W / 2, 23, { align: 'center' }
+  );
+  doc.text(
+    lang === 'es'
+      ? 'Modelo predictivo desarrollado sobre la cohorte del Hospital Universitario Puerto Real (2020-2025)'
+      : 'Predictive model developed on the Hospital Universitario Puerto Real cohort (2020-2025)',
+    W / 2, 29, { align: 'center' }
+  );
+  y = 44;
+
+  doc.setTextColor(33);
+
+  // Section A — Patient
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text(lang === 'es' ? 'A. Características maternas' : 'A. Maternal characteristics', margin, y); y += 8;
+  doc.setFontSize(10);
+
+  const bmiCat = getBmiCategory(result.imc);
+  const bmiCatLabel = lang === 'es' ? bmiCat.labelEs : bmiCat.labelEn;
+
+  const section_a: [string, string][] = [
+    [lang === 'es' ? 'Edad materna' : 'Maternal age', `${inputs.age} ${lang === 'es' ? 'años' : 'years'}`],
+    [lang === 'es' ? 'Peso pregestacional' : 'Pregestational weight', `${inputs.weight} kg`],
+    [lang === 'es' ? 'Talla' : 'Height', `${inputs.height} cm`],
+    ['IMC (Calculado)', `${result.imc.toFixed(1)} kg/m² (${bmiCatLabel})`],
+    [lang === 'es' ? 'Antecedente familiar diabetes' : 'Diabetes family history', inputs.familyHistory ? (lang === 'es' ? 'Sí' : 'Yes') : 'No'],
+    [lang === 'es' ? 'Paridad' : 'Parity', inputs.multipara ? (lang === 'es' ? 'Multípara (≥1 parto)' : 'Multiparous (≥1 birth)') : (lang === 'es' ? 'Primigesta' : 'Primiparous')],
+  ];
+  section_a.forEach(([lbl, val]) => {
+    doc.setFont('helvetica', 'bold'); doc.text(lbl + ':', margin, y);
+    doc.setFont('helvetica', 'normal'); doc.text(val, margin + 80, y); y += 5.5;
+  });
+  y += 3;
+
+  // Section B — Labs & Screening (only if present)
+  const showGlucose = inputs.glucose !== undefined && inputs.glucose !== null && !isNaN(inputs.glucose);
+  const showHba1c = inputs.hba1c !== undefined && inputs.hba1c !== null && !isNaN(inputs.hba1c);
+  const showPappa = inputs.pappa !== undefined && inputs.pappa !== null && !isNaN(inputs.pappa);
+  const showBhcg = inputs.freeBhcg !== undefined && inputs.freeBhcg !== null && !isNaN(inputs.freeBhcg);
+
+  if (showGlucose || showHba1c || showPappa || showBhcg) {
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text(lang === 'es' ? 'B. Laboratorio y cribado 1T' : 'B. 1T Lab & Screening', margin, y); y += 8;
+    doc.setFontSize(10);
+
+    const section_b: [string, string][] = [];
+    if (showGlucose) section_b.push([lang === 'es' ? 'Glucosa basal' : 'Fasting glucose', `${inputs.glucose} mg/dL`]);
+    if (showHba1c) section_b.push(['HbA1c', `${inputs.hba1c}%`]);
+    if (showPappa) section_b.push(['PAPP-A', `${inputs.pappa} MoM`]);
+    if (showBhcg) section_b.push(['β-hCG libre', `${inputs.freeBhcg} MoM`]);
+
+    section_b.forEach(([lbl, val]) => {
+      doc.setFont('helvetica', 'bold'); doc.text(lbl + ':', margin, y);
+      doc.setFont('helvetica', 'normal'); doc.text(val, margin + 80, y); y += 5.5;
+    });
+    y += 3;
+  }
+
+  // Section C — Risk Estimation
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text(lang === 'es' ? 'C. Estimación del riesgo de diabetes gestacional' : 'C. Gestational diabetes risk estimation', margin, y); y += 6;
+  
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(80);
+  const levelDesc = lang === 'es'
+    ? `Modelo activo: Nivel ${result.level} (AUC Total: ${result.auc.total.toFixed(3)}, Precoz: ${result.auc.precoz.toFixed(3)}, Tardía: ${result.auc.tardia.toFixed(3)})`
+    : `Active model: Level ${result.level} (AUC Total: ${result.auc.total.toFixed(3)}, Early: ${result.auc.precoz.toFixed(3)}, Late: ${result.auc.tardia.toFixed(3)})`;
+  doc.text(levelDesc, margin, y); y += 8;
+
+  doc.setTextColor(33);
+
+  // Side-by-side risk boxes
+  const boxW = 52;
+  const boxH = 32;
+  const gap = 7;
+
+  const getRiskStyles = (p: number): { box: [number, number, number], txt: [number, number, number], lbl: string } => {
+    if (p < 5) {
+      return { box: [225, 245, 238], txt: [15, 110, 86], lbl: lang === 'es' ? 'RIESGO BAJO' : 'LOW RISK' };
+    }
+    if (p <= 10) {
+      return { box: [250, 238, 218], txt: [133, 79, 11], lbl: lang === 'es' ? 'RIESGO MEDIO' : 'MEDIUM RISK' };
+    }
+    return { box: [252, 235, 235], txt: [163, 45, 45], lbl: lang === 'es' ? 'RIESGO ALTO' : 'HIGH RISK' };
+  };
+
+  const risks = [
+    { titleEs: 'Riesgo Total', titleEn: 'Total Risk', val: result.p_total },
+    { titleEs: 'DG Precoz', titleEn: 'Early GDM', val: result.p_precoz },
+    { titleEs: 'DG Tardía', titleEn: 'Late GDM', val: result.p_tardia }
+  ];
+
+  risks.forEach((r, idx) => {
+    const x = margin + idx * (boxW + gap);
+    const styles = getRiskStyles(r.val);
+
+    doc.setFillColor(...styles.box);
+    doc.roundedRect(x, y, boxW, boxH, 3, 3, 'F');
+
+    // Title inside box
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(80);
+    doc.text(lang === 'es' ? r.titleEs : r.titleEn, x + boxW / 2, y + 6, { align: 'center' });
+
+    // Percentage value
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...styles.txt);
+    doc.text(`${r.val.toFixed(1)}%`, x + boxW / 2, y + 17, { align: 'center' });
+
+    // Category Label
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text(styles.lbl, x + boxW / 2, y + 26, { align: 'center' });
+  });
+
+  y += boxH + 8;
+  doc.setTextColor(33);
+
+  // Section D — Recommendations
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text(lang === 'es' ? 'D. Recomendación clínica' : 'D. Clinical recommendation', margin, y); y += 7;
+
+  let recText = '';
+  if (result.p_precoz > 10) {
+    recText = lang === 'es'
+      ? 'Riesgo alto de diabetes gestacional precoz. Considerar O\'Sullivan anticipado en el primer trimestre y, si positivo, OGTT confirmatoria precoz. Iniciar intervención sobre estilo de vida sin esperar al cribado convencional.'
+      : 'High risk of early gestational diabetes. Consider early O\'Sullivan test in the first trimester and, if positive, early confirmatory OGTT. Initiate lifestyle intervention without waiting for conventional screening.';
+  } else if (result.p_precoz > 5 || result.p_total > 10) {
+    recText = lang === 'es'
+      ? 'Riesgo intermedio. Vigilancia activa y refuerzo de medidas higiénico-dietéticas. Considerar adelantar el cribado de 24-28 semanas si concurren otros factores clínicos.'
+      : 'Intermediate risk. Active surveillance and reinforcement of hygienic-dietary measures. Consider advancing the 24-28 week screening if other clinical factors concur.';
+  } else {
+    recText = lang === 'es'
+      ? 'Riesgo bajo. Cribado de O\'Sullivan según protocolo estándar (semanas 24-28). Mantener recomendaciones generales de control del embarazo.'
+      : 'Low risk. O\'Sullivan screening according to standard protocol (weeks 24-28). Maintain general pregnancy control recommendations.';
+  }
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  const recLines = doc.splitTextToSize(recText, cw) as string[];
+  doc.text(recLines, margin, y); y += recLines.length * 5 + 8;
+
+  // Bibliography
+  if (y > 240) { doc.addPage(); y = margin; }
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text(lang === 'es' ? 'Atribución y bibliografía' : 'Attribution & bibliography', margin, y); y += 6;
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(80);
+  
+  const biblioText = lang === 'es'
+    ? '• Desarrollado y validado en el Hospital Universitario Puerto Real, Cádiz, España (2020-2025).\n• Cohorte de estudio: 3.981 gestaciones caracterizadas prospectivamente (238 casos de DG, prevalencia 6,0%).\n• Diagnóstico por criterios de Carpenter-Coustan. Algoritmo de regresión logística Ridge con validación interna por bootstrap.'
+    : '• Developed and validated at Hospital Universitario Puerto Real, Cádiz, Spain (2020-2025).\n• Study cohort: 3,981 prospectively characterized pregnancies (238 GDM cases, prevalence 6.0%).\n• Diagnosis based on Carpenter-Coustan criteria. Ridge logistic regression algorithm with internal bootstrap validation.';
+  
+  const biblioLines = doc.splitTextToSize(biblioText, cw) as string[];
+  doc.text(biblioLines, margin, y); y += biblioLines.length * 4.5 + 8;
+
+  // Disclaimer
+  if (y > 270) { doc.addPage(); y = margin; }
+  doc.setFontSize(7.5);
+  doc.setTextColor(120);
+  const discText = lang === 'es'
+    ? 'Esta calculadora está diseñada para uso exclusivo de profesionales de la salud. La información proporcionada debe ser interpretada por un profesional y no sustituye la consulta médica ni ninguna prueba diagnóstica o terapéutica. Los autores no se hacen responsables del uso inapropiado.'
+    : 'This calculator is designed for exclusive use by healthcare professionals. The information provided must be interpreted by a professional and does not replace medical consultation or any diagnostic or therapeutic procedure. The authors are not responsible for inappropriate use.';
+  
+  const discLines = doc.splitTextToSize(discText, cw) as string[];
+  doc.text(discLines, margin, y);
+
+  doc.save('gdm_risk_report.pdf');
 };
 
